@@ -1,0 +1,5 @@
+kafka:
+    topics:
+        itemUpdate: datadublishderver.realtimedata
+        rtData: data.rt
+        seatData: data.seat

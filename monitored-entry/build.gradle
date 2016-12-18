@@ -1,0 +1,80 @@
+group 'yydk'
+version '2.0'
+apply plugin: 'application'
+apply plugin: 'java'
+
+
+repositories {
+    flatDir {
+        dirs 'lib'
+    }
+}
+ext{
+    monitor=project(':monitor-impl')
+}
+dependencies {
+    compile fileTree(dir: './lib')
+    compile project(":monitor-api")
+}
+
+//自定义生产测试两套配置
+def env = System.getProperty("dist") ?"ga":"dev"
+
+sourceSets {
+    main {
+        resources {
+            srcDirs = [//"src/main/resources",
+                       "src/main/distinctions/$env"]
+        }
+    }
+}
+
+
+//java插件---------------
+//配置processResource
+processResources{
+    from new File(monitor.buildDir,'conf')
+    filter{ String line ->
+        line.startsWith('moniteredService.impl')?'moniteredService.impl='+mainClassName:line.startsWith('server.port')?'server.port=9529':line
+    }
+    filter{String line ->
+        line.startsWith('controllerBean.name')?'controllerBean.name=data.datareceiveserver':line
+    }
+    destinationDir file('build/conf') //
+}
+
+
+
+//------------------application 配置----------
+mainClassName = 'com.van.DataReceiver'
+distributions {
+    main {
+        contents {
+            //新增一个源和目标，注意into的路径表示
+            from('build/conf'){
+                into 'conf'
+            }
+            from(new File (monitor.buildDir,'/libs')){
+                into 'lib'
+            }
+            from(new File (monitor.projectDir,'/libs')){
+                into 'lib'
+            }
+            from(new File (monitor.buildDir,'/scripts')){
+                into 'bin'
+            }
+        }
+    }
+}
+startScripts{
+    doLast{
+        windowsScript.delete()
+        unixScript.delete()
+    }
+}
+
+/*
+
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
+}*/

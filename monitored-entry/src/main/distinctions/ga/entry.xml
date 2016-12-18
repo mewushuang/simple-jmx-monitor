@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties version="1.0" >
+    
+    <!--连接配置-->
+    <entry key="seat.connect.node">10.90.133.54:8386</entry>
+    <entry key="rt.connect.node">10.90.133.54:8385</entry>
+    <!--<entry key="connect.node">10.90.132.59:8386</entry>-->
+    <entry key="connect.timeout">15000</entry>
+    <!-- zookeeper服务器列表 -->
+    <!--<entry key="zookeeperServerList">rhvan:2181</entry>-->
+    <entry key="zookeeperServerList">10.90.133.120:2181,10.90.133.121:2181,10.90.133.122:2181</entry>
+
+    <!--zookeeper注册的临时节点，做主备切换用-->
+    <entry key="seat.zookeeperPath">/com/kd/seatDataClient</entry>
+    <entry key="rt.zookeeperPath">/com/kd/realtimedDataClient</entry>
+
+
+    <entry key="seat.initMsg">{"servicecode":"P01_02020,P01_0202001,P01_0202002,P01_02013,P01_0201301,P01_0201302,P01_0201303,P01_0201304,P01_0201305,P01_0201308,P01_02007,P01_0200701,P01_0200302,P01_02001,P01_0200101,P01_0200102,P01_02062,P01_02063,P01_02016,P01_02060,P01_02061,P01_02031,P01_02069,P01_02064,P01_02067,P01_02065,P01_02066,P01_02018,P01_02019,P01_02033,P01_02017","source":"kd"}</entry>
+    <!--实时接口东软做了全配置,此处不再需要发送初始化信息-->
+    <entry key="rt.initMsg">2541{"servicecode":"P01_02001，P01_02002，P01_02003.....","source":"kd"}</entry>
+
+    <!--是否打印报文日志 1是0否-->
+    <entry key="seat.logRecordPacket">1</entry>
+    <entry key="rt.logRecordPacket">1</entry>
+    <!--日志文件前缀-->
+    <entry key="seat.logNamePrefix">seat</entry>
+    <entry key="rt.logNamePrefix">rt</entry>
+</properties>

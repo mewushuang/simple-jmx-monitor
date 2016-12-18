@@ -1,0 +1,105 @@
+
+
+apply plugin: 'application'
+
+
+
+repositories {
+    flatDir {
+        dirs 'libs'
+    }
+}
+
+dependencies {
+    compile fileTree(dir: './libs')
+    compile project(":monitor-api")
+    //compile 'yydk:monitor-api:1.0-release'
+    testCompile group: 'junit', name: 'junit', version: '4.11'
+}
+
+
+
+//------------------application 配置----------
+mainClassName = 'com.van.monitor.example.SimpleServer'
+
+//打包源码
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+jar.dependsOn sourcesJar
+
+//将log4j和应用配置文件从原本的位置（jar包内部）移动到conf文件夹下
+processResources{
+    destinationDir file('build/conf') //此时貌似$buildDir不可用
+}
+//打包时处理conf文件
+distributions {
+
+    main {
+        contents {
+            //新增一个源和目标，注意into的路径表示
+            from('build/conf'){
+                into 'conf'
+            }
+            from('src/readme.md'){//拷贝到打包的根目录下
+            }
+            from('build/libs'){
+                include '**/*-sources.jar'
+            }
+        }
+    }
+}
+
+def jmxServerPort='9999'
+def startupApplicationDefaultJvmArgs = [
+        '-Dapp.home=MY_APP_HOME',
+        '-Duser.dir=MY_APP_HOME',
+        //使用移动到conf后的配置文件
+        '-Dlog4j.configuration=file:///MY_APP_HOME/conf/log4j.xml',
+        '-Dapplication.confDir=MY_APP_HOME/conf/',
+        //jmx参数
+        //涉及到共享监控平台的服务间的隔离问题，目前目前不使用共享策略，每个服务通过rmi配置单独的端口来实现隔离
+        //TODO 后期可进行完善，做成类似tomcat的进行平台性质的管理（日志隔离/类加载隔离）
+        /*'-Dcom.sun.management.jmxremote',
+        '-Dcom.sun.management.jmxremote.port='+jmxServerPort,
+        '-Dcom.sun.management.jmxremote.authenticate=false',
+        '-Dcom.sun.management.jmxremote.ssl=false'*/
+]
+applicationDefaultJvmArgs=[
+        '-Dapp.home=MY_APP_HOME',
+        '-Duser.dir=MY_APP_HOME',
+        '-Dlog4j.configuration=file:///MY_APP_HOME/conf/log4j.xml',
+        '-Dapplication.confDir=MY_APP_HOME/conf/',
+        //'-Dcom.van.monitor.server.port='+jmxServerPort,
+        '-Dcom.van.monitor.server.action=close'
+]
+//在Application插件中，是不能直接使用APP_HOME环境变量的，直接写入将不会被识别，需要做一下转换
+startScripts {
+    unixStartScriptGenerator.template = resources.text.fromFile('customUnixStartScript.txt')
+    windowsStartScriptGenerator.template = resources.text.fromFile('customWindowsStartScript.txt')
+    doLast {
+        //替换字符串语法
+        unixScript.text = unixScript.text.replace('MY_APP_HOME', '\$APP_HOME')
+        windowsScript.text = windowsScript.text.replace('MY_APP_HOME', '%~dp0..')
+
+        /*新建文件并写入内容
+        new File(outputDir.absolutePath+"/shutdown.bat")
+                .write(windowsScript.text.replace('a','b')
+        );*/
+
+        //重命名脚本，然后用新的变量重新生成shutdown脚本
+        windowsScript.renameTo(outputDir.absolutePath+"/shutdown.bat")
+        unixScript.renameTo(outputDir.absolutePath+"/shutdown")
+
+        //重新生成
+        applicationDefaultJvmArgs=startupApplicationDefaultJvmArgs
+        generate()
+        unixScript.text = unixScript.text.replace('MY_APP_HOME', '\$APP_HOME')
+        windowsScript.text = windowsScript.text.replace('MY_APP_HOME', '%~dp0..')
+
+
+
+    }
+
+}

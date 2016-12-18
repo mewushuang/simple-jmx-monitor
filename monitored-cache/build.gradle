@@ -1,0 +1,102 @@
+group 'yydk'
+version '1.0-release'
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:1.4.2.RELEASE")
+    }
+}
+apply plugin: 'application'
+apply plugin: 'idea'
+apply plugin: 'org.springframework.boot'
+
+ext{
+    monitor=project(':monitor-impl')
+}
+
+repositories {
+    flatDir {
+        dirs 'lib'
+    }
+    mavenCentral()
+}
+
+
+dependencies {
+    compile fileTree(dir:'lib')
+    compile project(":monitor-api")
+    compile("org.springframework.boot:spring-boot-starter")
+    compile("org.springframework.boot:spring-boot-configuration-processor")
+}
+//自定义生产测试两套配置
+def env = System.getProperty("dist") ?"ga":"conf"
+
+sourceSets {
+    main {
+        resources {
+            srcDirs = [//"src/main/resources",
+                       "src/main/distinctions/$env"]
+        }
+    }
+}
+
+mainClassName = 'com.van.Cacher'
+
+
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
+}
+
+processResources{
+    from new File(monitor.buildDir,'conf')
+    filter{ String line ->
+        line.startsWith('server.port')?'server.port=9530':line.startsWith('moniteredService.impl')?'moniteredService.impl='+mainClassName:line
+    }
+    filter{String line ->
+        line.startsWith('controllerBean.name')?'controllerBean.name=data.datastoreserver':line
+    }
+    destinationDir file('build/conf') //
+}
+/*task copyConf(type:Copy){
+    from 'conf'
+    into 'build/conf'
+}
+jar.dependsOn copyConf*/
+task copyJars(type: Copy){
+    doFirst{
+        new File('C:\\Users\\van\\Desktop\\temp\\monitor-impl-1.0-release\\lib\\message-persistence-1.0-SNAPSHOT.jar')
+        .delete();
+    }
+    from 'build/libs'
+    into 'C:\\Users\\van\\Desktop\\temp\\monitor-impl-1.0-release\\lib'
+}
+distZip.dependsOn copyJars
+//打包时处理conf文件
+//将本项目生成的jar和依赖 加上 monitor-impl生成的框架 合并到一起打包
+distributions {
+    main {
+        contents {
+            //新增一个源和目标，注意into的路径表示
+            from('build/conf'){
+                into 'conf'
+            }
+            from(new File (monitor.buildDir,'/libs')){
+                into 'lib'
+            }
+            from(new File (monitor.projectDir,'/libs')){
+                into 'lib'
+            }
+            from(new File (monitor.buildDir,'/scripts')){
+                into 'bin'
+            }
+        }
+    }
+}
+startScripts{
+    doLast{
+        windowsScript.delete()
+        unixScript.delete()
+    }
+}
