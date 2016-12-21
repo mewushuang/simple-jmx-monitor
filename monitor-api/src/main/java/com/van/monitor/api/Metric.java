@@ -21,6 +21,13 @@ public abstract class Metric {
         this.value = value;
         this.needSave=needSave;
         this.description = description;
+        if(needSave){
+            try {
+                Double.parseDouble(value);
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("存历史库需要value是数值类型");
+            }
+        }
     }
 
 
@@ -45,6 +52,13 @@ public abstract class Metric {
 
     public void setValue(String value) {
         this.value = value;
+        if(needSave){
+            try {
+                Double.parseDouble(value);
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("存历史库需要value是数值类型");
+            }
+        }
     }
 
     public String getDescription() {

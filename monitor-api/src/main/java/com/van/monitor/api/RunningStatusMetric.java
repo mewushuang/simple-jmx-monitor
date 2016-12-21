@@ -6,7 +6,7 @@ import java.io.Serializable;
  * Created by van on 2016/12/2.
  */
 public class RunningStatusMetric extends Metric implements Serializable {
-
+public static final String NAME="runningStatus";
     public enum RunningStatus{
         /**
          * jmx client停止
@@ -28,7 +28,7 @@ public class RunningStatusMetric extends Metric implements Serializable {
      * @param status
      */
     public RunningStatusMetric(RunningStatus status) {
-        super("runningStatus",status.name(),false,"服务运行状态");
+        super(NAME,status.name(),false,"服务运行状态");
         if(status==null){
             throw new IllegalArgumentException("error initializing RunningStatusMetric,status cannot be null");
         }

@@ -7,6 +7,7 @@ import org.hyperic.sigar.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,7 +17,7 @@ import java.util.Map;
 public class SigarlSysInfoMonitor extends ResponseJsonSerialization implements SysInfoMonitorMXBean {
 
     private Logger logger= LoggerFactory.getLogger(SigarlSysInfoMonitor.class);
-
+    private DecimalFormat numberFormat=new DecimalFormat("#.00");
     private ObjectMapper mapper;
 
     private Sigar sigar ;
@@ -54,7 +55,7 @@ public class SigarlSysInfoMonitor extends ResponseJsonSerialization implements S
             // 内存总量
             changeful.put("totalMemGB", mem.getTotal() / 1024L / 1024L/1024L);
             // 当前内存使用量
-            changeful.put("memUsagePercent", java.lang.Math.round(mem.getUsed()*100D/mem.getTotal()));
+            changeful.put("memUsagePercent", numberFormat.format(mem.getUsed()*100D/mem.getTotal()));
 
             //主机名
             changeful.put("hostname",sigar.getNetInfo().getHostName());
@@ -65,7 +66,7 @@ public class SigarlSysInfoMonitor extends ResponseJsonSerialization implements S
                 //System.out.println(cpuList[i].getCombined());
                 cpuTotal += cpuList[i].getCombined();// 总的使用率
             }
-            changeful.put("cpuUsagePercent",java.lang.Math.round(cpuTotal / cpuList.length*100.0));
+            changeful.put("cpuUsagePercent",numberFormat.format(cpuTotal / cpuList.length*100.0));
             changeful.put("cpuTotalNum",cpuList.length);
 
             FileSystem fslist[] = sigar.getFileSystemList();
@@ -105,7 +106,7 @@ public class SigarlSysInfoMonitor extends ResponseJsonSerialization implements S
             }
 
             changeful.put("totalDiskGB",total);
-            changeful.put("diskUsagePercent",100-java.lang.Math.round(avail*100D/total));
+            changeful.put("diskUsagePercent",numberFormat.format(100-avail*100D/total));
 
             return getSuccResponse(changeful);
         } catch (Exception e) {

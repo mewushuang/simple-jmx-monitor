@@ -104,7 +104,7 @@ public class ServerMB extends ResponseJsonSerialization implements ControllerMXB
         List<Metric> ret =service.getExtraMetrics(args);
         if(ret==null) ret=new ArrayList<>();
         ret.add(service.getRunningStatus(args));
-        return serialize(ret);
+        return getSuccResponse(ret);
     }
 
 
