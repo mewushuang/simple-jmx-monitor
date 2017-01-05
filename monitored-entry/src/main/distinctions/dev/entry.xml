@@ -3,8 +3,8 @@
 <properties version="1.0" >
     
     <!--连接配置-->
-    <entry key="seat.connect.node">127.0.0.1:19999</entry>
-    <entry key="rt.connect.node">127.0.0.1:19999</entry>
+    <entry key="seat.connect.node">127.0.0.1:44444</entry>
+    <entry key="rt.connect.node">127.0.0.1:22222</entry>
     <!--<entry key="connect.node">10.90.132.59:8386</entry>-->
     <entry key="connect.timeout">15000</entry>
     <!-- zookeeper服务器列表 -->

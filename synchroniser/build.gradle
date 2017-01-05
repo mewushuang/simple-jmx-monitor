@@ -1,0 +1,71 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:1.4.2.RELEASE")
+    }
+}
+apply plugin: 'application'
+apply plugin: 'idea'
+apply plugin: 'org.springframework.boot'
+repositories {
+    maven{
+        url="http://maven.aliyun.com/nexus/content/groups/public/"
+    }
+}
+def spingBootVersion="1.4.2.RELEASE"
+def spingVersion="4.3.4.RELEASE"
+dependencies {
+    compile "org.springframework.boot:spring-boot-starter-jdbc:"+spingBootVersion
+    compile "org.quartz-scheduler:quartz:2.1.7"
+    //compile "org.springframework:spring-context-support:"+spingVersion
+    compile "org.springframework.boot:spring-boot-devtools:"+spingBootVersion
+    compile "org.springframework.boot:spring-boot-configuration-processor:"+spingBootVersion
+    compile project(":monitor-api")
+    compile fileTree(dir: './lib')
+}
+
+
+ext{
+    monitor=project(':monitor-impl')
+    ctrlname= 'data.dbsynchroniser'
+    monitorPort=9531
+}
+mainClassName = 'com.van.data.syncer.MonitoredSynchroniser'
+compileJava.dependsOn(processResources)
+processResources{
+    from new File(monitor.buildDir,'conf')
+    filter{ String line ->
+        line.startsWith('server.port')?'server.port='+monitorPort:line.startsWith('moniteredService.impl')?'moniteredService.impl='+mainClassName:line
+    }
+    filter{String line ->
+        line.startsWith('controllerBean.name')?'controllerBean.name='+ctrlname:line
+    }
+    destinationDir file('build/conf')
+}
+distributions {
+    main {
+        contents {
+            //新增一个源和目标，注意into的路径表示
+            from('build/conf'){
+                into 'conf'
+            }
+            from(new File (monitor.buildDir,'/libs')){
+                into 'lib'
+            }
+            from(new File (monitor.projectDir,'/libs')){
+                into 'lib'
+            }
+            from(new File (monitor.buildDir,'/scripts')){
+                into 'bin'
+            }
+        }
+    }
+}
+startScripts{
+    doLast{
+        windowsScript.delete()
+        unixScript.delete()
+    }
+}

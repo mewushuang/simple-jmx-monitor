@@ -4,4 +4,5 @@ include 'monitor-impl'
 /**/
 include 'monitored-cache'
 include 'monitored-entry'
+include 'synchroniser'
 

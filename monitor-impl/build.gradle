@@ -56,7 +56,7 @@ def startupApplicationDefaultJvmArgs = [
         '-Dapp.home=MY_APP_HOME',
         '-Duser.dir=MY_APP_HOME',
         //使用移动到conf后的配置文件
-        '-Dlog4j.configuration=file:///MY_APP_HOME/conf/log4j.xml',
+        '-Dlogback.configurationFile=file:///MY_APP_HOME/conf/logback.xml',
         '-Dapplication.confDir=MY_APP_HOME/conf/',
         //jmx参数
         //涉及到共享监控平台的服务间的隔离问题，目前目前不使用共享策略，每个服务通过rmi配置单独的端口来实现隔离
@@ -69,14 +69,14 @@ def startupApplicationDefaultJvmArgs = [
 applicationDefaultJvmArgs=[
         '-Dapp.home=MY_APP_HOME',
         '-Duser.dir=MY_APP_HOME',
-        '-Dlog4j.configuration=file:///MY_APP_HOME/conf/log4j.xml',
+        '-Dlogback.configurationFile=file:///MY_APP_HOME/conf/logback.xml',
         '-Dapplication.confDir=MY_APP_HOME/conf/',
         //'-Dcom.van.monitor.server.port='+jmxServerPort,
         '-Dcom.van.monitor.server.action=close'
 ]
 //在Application插件中，是不能直接使用APP_HOME环境变量的，直接写入将不会被识别，需要做一下转换
 startScripts {
-    unixStartScriptGenerator.template = resources.text.fromFile('customUnixStartScript.txt')
+    unixStartScriptGenerator.template = resources.text.fromFile('shutdownForUnix.txt')
     windowsStartScriptGenerator.template = resources.text.fromFile('customWindowsStartScript.txt')
     doLast {
         //替换字符串语法
@@ -88,12 +88,13 @@ startScripts {
                 .write(windowsScript.text.replace('a','b')
         );*/
 
-        //重命名脚本，然后用新的变量重新生成shutdown脚本
+        //重命名为shutdown脚本，然后用新的变量重新生成启动脚本
         windowsScript.renameTo(outputDir.absolutePath+"/shutdown.bat")
         unixScript.renameTo(outputDir.absolutePath+"/shutdown")
 
         //重新生成
         applicationDefaultJvmArgs=startupApplicationDefaultJvmArgs
+        unixStartScriptGenerator.template = resources.text.fromFile('customUnixStartScript.txt')
         generate()
         unixScript.text = unixScript.text.replace('MY_APP_HOME', '\$APP_HOME')
         windowsScript.text = windowsScript.text.replace('MY_APP_HOME', '%~dp0..')

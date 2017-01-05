@@ -16,3 +16,6 @@ config = new Properties();
 String path=System.getProperty("application.confDir");
 config.load(new InputStreamReader(new FileInputStream(path+"monitor.properties"), Charset.forName("utf-8")));
 ```
+###tips
+1. windows不支持后台进程重启
+2. 起停脚本都要赋执行权限

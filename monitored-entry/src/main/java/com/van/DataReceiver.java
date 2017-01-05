@@ -16,8 +16,8 @@ import java.util.concurrent.Executors;
  * Created by van on 2016/12/12.
  */
 public class DataReceiver implements MonitoredService {
-    private final String SEAT_ARG = "seat";
-    private final String RT_ARG = "rt";
+    public static final String SEAT_ARG = "seat";
+    public static final String RT_ARG = "rt";
 
     private final Logger logger = LoggerFactory.getLogger(DataReceiver.class);
 
@@ -29,9 +29,9 @@ public class DataReceiver implements MonitoredService {
     @Override
     public void stop(String[] strings) {
         checkParams(strings);
-        if (SEAT_ARG.equalsIgnoreCase(strings[0])) {
+        if (isSeat(strings)) {
             if(seat!=null) seat.stop();
-        } else if (RT_ARG.equalsIgnoreCase(strings[0])) {
+        } else if (isRt(strings)) {
             if(rt!=null) rt.stop();
         } else {
             checkParam(strings[0]);
@@ -41,17 +41,34 @@ public class DataReceiver implements MonitoredService {
     @Override
     public void start(String[] strings) {
         checkParams(strings);
-        if (SEAT_ARG.equalsIgnoreCase(strings[0])) {
+        if (isSeat(strings)) {
+            logger.info("received start command for "+SEAT_ARG);
             seat = new Client(Client.SEAT_MODULE);
             seat.startHighAvailable();
-        } else if (RT_ARG.equalsIgnoreCase(strings[0])) {
+        } else if (isRt(strings)) {
+            logger.info("received start command for "+RT_ARG);
             rt = new Client(Client.RT_MODULE);
             rt.startHighAvailable();
         } else {
             checkParam(strings[0]);
         }
     }
-
+    private boolean isSeat(String[] args){
+        for(int i=0;i<args.length;i++){
+            if(SEAT_ARG.equalsIgnoreCase(args[i])){
+                return true;
+            }
+        }
+        return false;
+    }
+    private boolean isRt(String[] args){
+        for(int i=0;i<args.length;i++){
+            if(RT_ARG.equalsIgnoreCase(args[i])){
+                return true;
+            }
+        }
+        return false;
+    }
     private void checkParam(String string) {
         logger.error("wrong param:" + string + ", expect " + SEAT_ARG + " or " + RT_ARG);
         throw new IllegalArgumentException("wrong param:" + string + ", expect " + SEAT_ARG + " or " + RT_ARG);
@@ -89,9 +106,9 @@ public class DataReceiver implements MonitoredService {
     @Override
     public RunningStatusMetric getRunningStatus(String[] strings) {
         checkParams(strings);
-        if (SEAT_ARG.equalsIgnoreCase(strings[0])) {
+        if (isSeat(strings)) {
             return new RunningStatusMetric(seat==null? RunningStatusMetric.RunningStatus.stopped:seat.getRunningStatus());
-        } else if (RT_ARG.equalsIgnoreCase(strings[0])) {
+        } else if (isRt(strings)) {
             return new RunningStatusMetric(rt==null? RunningStatusMetric.RunningStatus.stopped:rt.getRunningStatus());
         } else {
             checkParam(strings[0]);
@@ -107,14 +124,14 @@ public class DataReceiver implements MonitoredService {
     public static void main(String[] args) throws InterruptedException {
         final  DataReceiver d=new DataReceiver();
         ExecutorService threadPool = Executors.newFixedThreadPool(5);
-        //d.startDefault(threadPool);
-        new Thread(){
+        d.startDefault(threadPool);
+        /*new Thread(){
             @Override
             public void run() {
                 d.start(new String[]{d.SEAT_ARG});
             }
         }.start();
-        d.start(new String[]{d.RT_ARG});
+        d.start(new String[]{d.RT_ARG});*/
         /*Thread.sleep(20000);
         d.stopDefault();
         threadPool.shutdown();*/

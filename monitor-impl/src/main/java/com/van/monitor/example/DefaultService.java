@@ -6,6 +6,7 @@ import com.van.monitor.api.RunningStatusMetric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Executor;
 
@@ -19,11 +20,13 @@ public class DefaultService implements MonitoredService {
 
     @Override
     public void stop(String[] key){
+        String k=key==null?"\"\"": Arrays.asList(key).toString();
+        logger.info("service stopping:"+this.getClass().getName()+", the key is "+k);
         this.isStopping=true;
     }
     @Override
     public void start(String[] key){
-        String k=key==null?"\"\"":key.toString();
+        String k=key==null?"\"\"": Arrays.asList(key).toString();
         logger.info("service starting:"+this.getClass().getName()+", the key is "+k);
         isStopping=false;
         while (!isStopping&&!Thread.currentThread().isInterrupted()){
@@ -64,6 +67,8 @@ public class DefaultService implements MonitoredService {
      */
     @Override
     public RunningStatusMetric getRunningStatus(String[] key) {
+        String k=key==null?"\"\"": Arrays.asList(key).toString();
+        logger.debug("getting running status:"+this.getClass().getName()+", the key is "+k);
         return new RunningStatusMetric(isStopping ?
                 RunningStatusMetric.RunningStatus.stopped
                 : RunningStatusMetric.RunningStatus.running);
@@ -77,6 +82,8 @@ public class DefaultService implements MonitoredService {
      */
     @Override
     public List<Metric> getExtraMetrics(String[] key) {
+        String k=key==null?"\"\"": Arrays.asList(key).toString();
+        logger.debug("getting extra metrics:"+this.getClass().getName()+", the key is "+k);
         return null;
     }
 

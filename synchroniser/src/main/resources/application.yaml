@@ -1,0 +1,149 @@
+
+spring:
+  datasource:
+    # 主数据源，默认的（同步业务的源数据源）
+    src:
+      driver-class-name: oracle.jdbc.driver.OracleDriver
+      url: "jdbc:oracle:thin:@10.90.85.234:10026/ccmsdb"
+      username: omsccmsselect
+      password: omsccmsselect
+    # 自定义数据源（同步业务的目标数据源）
+    des:
+      driver-class-name: oracle.jdbc.driver.OracleDriver
+      url: "jdbc:oracle:thin:@192.168.139.128:1521/orcl"
+      username: yydk
+      password: yydk
+
+sync:
+  size: 1000
+  tasks:
+    -
+      #班组维护表、座席明细信息表同步周期：一天两次，时间：12:00与24:00
+      name: team-meta-sync
+      des: TEAM_INFO
+      cron: "0 0 0,12 * * ?"
+      #cron: "0 * * * * ?"
+      sql: "SELECT SHT.ID AS ID,
+                  SHT.NODE_NAME AS NODE_NAME,
+                  SHT.ORGAN_CODE AS ORGAN_CODE,
+                  SHT.PARENT_ID AS PARENT_ID,
+                  (SELECT SHT1.ORGAN_CODE
+                     FROM SM_HR_TREE SHT1
+                    WHERE SHT1.ID = SHT.PARENT_ID) AS P_ORGAN_CODE,
+                  (SELECT SHT1.NODE_NAME
+                     FROM SM_HR_TREE SHT1
+                    WHERE SHT1.ID = SHT.PARENT_ID) AS P_NODE_NAME,
+                  SHT.NODE_TYPE_CODE AS NODE_TYPE_CODE,
+                  SHT.DISP_SN AS DISP_SN,
+                  SHT.IS_VALID AS IS_VALID
+             FROM SM_HR_TREE SHT"
+
+    -
+      #班组维护表、座席明细信息表同步周期：一天两次，时间：12:00与24:00
+      name: seat-meta-sync
+      des: SEAT_INFO
+      cron: "0 0 0,12 * * ?"
+      #cron: "20 * * * * ?"
+      sql: "SELECT ASEI.ID AS ID,
+                  ASEI.SEAT_EMP_NO AS SEAT_NO,
+                  MU.USER_NAME AS SEAT_NAME,
+                  SHBI.GROUP_NO AS GROUP_NO,
+                  (SELECT SHT.NODE_NAME
+                     FROM SM_HR_TREE SHT
+                    WHERE SHT.ID = SHBI.GROUP_NO) AS GROUP_NAME,
+                  SHBI.IS_MONITOR AS IS_MONITOR,
+                  MU.DEPT_NO AS ORGAN_CODE,
+                  MU.DEPT_NAME AS ORGAN_NAME,
+                  ASEI.STAR_LEAVEL AS STAR_LEVEL,
+                  ASEI.SEAT_CTI_NO AS SEAT_JOB_NO,
+                  MU.ORG_NO AS ORG_NO,
+                  MU.ORG_NAME AS ORG_NAME,
+                  MU.ACCOUNT_STATUS AS IS_VALID
+             FROM AO_SEAT_EMP_INFO ASEI, MV_USERS MU, SM_HRM_BASE_INFO SHBI
+            WHERE ASEI.SEAT_EMP_NO = MU.USER_ID
+              AND ASEI.SEAT_EMP_NO = SHBI.EMP_NO(+)"
+    -
+      #排班表同步周期：一天一次，时间：凌晨2:00
+      name: duty-shift-sync
+      des: SEAT_SCHEDULE
+      cron: "0 0 2 * * ?"
+      #cron: "40 * * * * ?"
+      sql: "SELECT MENWD.TEMP_ID       AS TEMP_ID,
+                  MENWD.EMP_NO        AS EMP_NO,
+                  MENWD.EMP_NAME      AS EMP_NAME,
+                  MENWD.MODEL_ID      AS MODEL_ID,
+                  MENWD.MODEL_NAME    AS MODEL_NAME,
+                  MENWD.WORK_TIME     AS WORK_TIME,
+                  MENWD.GROUP_ID      AS GROUP_ID,
+                  MENWD.GROUP_NAME    AS GROUP_NAME,
+                  MENWD.IS_MONITOR    AS IS_MONITOR,
+                  MENWD.ORG_NO        AS ORG_NO,
+                  MENWD.ORG_NAME      AS ORG_NAME,
+                  MENWD.DEPT_NO       AS DEPT_NO,
+                  MENWD.DEPT_NAME     AS DEPT_NAME,
+                  MENWD.WORK_BGN_TIME AS WORK_BGN_TIME,
+                  MENWD.WORK_END_TIME AS WORK_END_TIME
+             FROM MV_EMP_N_WK_DETAIL MENWD
+            WHERE WORK_BGN_TIME>TO_CHAR(SYSDATE-3,'yyyy-mm-dd hh24:mi:ss')
+              AND WORK_BGN_TIME<to_char(sysdate+3,'yyyy-mm-dd hh24:mi:ss')"
+    -
+      #座席技能信息表同步周期：30分钟一次，时间：00:00 0:30  1:00 以此类推
+      name: seat-type-sync
+      des: SEAT_SKILL_INFO
+      cron: "0 0,30 * * * ?"
+      #cron: "50 * * * * ?"
+      sql: "SELECT
+              DISTINCT MU.USER_ID AS SEAT_NO,
+                          MU.USER_NAME AS SEAT_NAME,
+                          ASEI.STAR_LEAVEL AS SKILL_GRADE_CODE,
+                          SKILL_TEMP.AREA_SKILL AS TECHNI_SKI_CODE,
+                          SKILL_TEMP.LANGUAGE_SKILL AS LANG_SKI_CODE,
+                          SKILL_TEMP.BUSINESS_SKILL AS EMERGE_SKI_CODE,
+                          MU.DEPT_NO AS ORGAN_CODE,
+                          MU.DEPT_NAME AS ORGAN_NAME,
+                          decode(SUBSTR(MU.USER_ID, 4, 1), 0, '0', '9', '1') AS POSITION_NAME,
+                          (SELECT DECODE(EPBI.STATE_TYPE_CODE,
+                                         '01',
+                                         '01',
+                                         '04',
+                                         '02',
+                                         '05',
+                                         '03')
+                             FROM EM_POSITION_BASE_INFO EPBI
+                            WHERE EPBI.EMP_NO = MU.USER_ID) AS STATE_TYPE_CODE,
+                          MU.ORG_NO,
+                          MU.ORG_NAME
+              FROM MV_USERS MU, AO_SEAT_EMP_INFO ASEI
+              LEFT JOIN AO_SEAT_SKILL_RELA ASSR
+                ON ASEI.SEAT_EMP_NO = ASSR.EMP_NO
+              LEFT JOIN (SELECT ASSR.EMP_NO AS EMP_NO,
+                              TO_CHAR(LISTAGG(DECODE(ASCI.SKILL_CLASS_CODE,
+                                                     '01',
+                                                     ASI.SKILL_NAME || '(' ||
+                                                     ASSR.SKILL_LEVEL_TYPE_CODE || ')'),
+                                              ',') WITHIN
+                                      GROUP(ORDER BY
+                                            ASSR.SKILL_LEVEL_TYPE_CODE DESC)) AS LANGUAGE_SKILL,
+                              TO_CHAR(LISTAGG(DECODE(ASCI.SKILL_CLASS_CODE,
+                                                     '02',
+                                                     ASI.SKILL_NAME || '(' ||
+                                                     ASSR.SKILL_LEVEL_TYPE_CODE || ')'),
+                                              ',') WITHIN
+                                      GROUP(ORDER BY
+                                            ASSR.SKILL_LEVEL_TYPE_CODE DESC)) AS AREA_SKILL,
+                              TO_CHAR(LISTAGG(DECODE(ASCI.SKILL_CLASS_CODE,
+                                                     '03',
+                                                     ASI.SKILL_NAME || '(' ||
+                                                     ASSR.SKILL_LEVEL_TYPE_CODE || ')'),
+                                              ',') WITHIN
+                                      GROUP(ORDER BY
+                                            ASSR.SKILL_LEVEL_TYPE_CODE DESC)) AS BUSINESS_SKILL
+                         FROM AO_SEAT_SKILL_RELA  ASSR,
+                              AO_SKILL_INFO       ASI,
+                              AO_SKILL_CLASS_INFO ASCI
+                        WHERE ASSR.SKILL_ID = ASI.ID
+                          AND ASCI.ID = ASI.SKILL_CLASS_ID
+                        GROUP BY ASSR.EMP_NO) skill_temp
+              ON skill_temp.EMP_NO = ASEI.SEAT_EMP_NO
+           WHERE ASEI.SEAT_EMP_NO = MU.USER_ID"
+

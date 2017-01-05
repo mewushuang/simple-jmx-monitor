@@ -8,7 +8,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.management.remote.JMXConnectorServer;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executor;
@@ -18,7 +20,9 @@ import java.util.concurrent.Executor;
  */
 public class ServerMB extends ResponseJsonSerialization implements ControllerMXBean {
 
+    private final String pid;
     private Logger logger = LoggerFactory.getLogger(ServerMB.class);
+    public final String ALL_SERVICE_FLAG="ALL";
 
     private MonitoredService service;
     private Executor threadPool;
@@ -35,8 +39,9 @@ public class ServerMB extends ResponseJsonSerialization implements ControllerMXB
      * @param threadPool
      * @param serviceClassName 配置读取服务类名，通过反射的方式加载
      */
-    public ServerMB(Executor threadPool, String serviceClassName, JMXConnectorServer serverForShutdown) {
+    public ServerMB(Executor threadPool, String serviceClassName, JMXConnectorServer serverForShutdown,String pid) {
         this.threadPool = threadPool;
+        this.pid=pid;
         this.serverForShutDown=serverForShutdown;
         try {
             this.service = (MonitoredService) Class.forName(serviceClassName).newInstance();
@@ -78,6 +83,14 @@ public class ServerMB extends ResponseJsonSerialization implements ControllerMXB
         service.startDefault(threadPool);
         return getEmptySuccResponse();
     }
+    /**
+     * 默认启动逻辑：在监控后台启动时被调用一次
+     */
+    @Override
+    public String stopDefault() {
+        service.stopDefault();
+        return getEmptySuccResponse();
+    }
 
     @Override
     public String stop(String[] args) {
@@ -90,8 +103,34 @@ public class ServerMB extends ResponseJsonSerialization implements ControllerMXB
     }
 
     @Override
-    public String restart(String[] args) {
-        return getResponse(400, "service had been stopped", null);
+    public String restartDaemon() {
+        if('\\'==File.separatorChar){
+            return getResponse(400, "do not support daemon restart on windows",null);
+        }
+        logger.info("restarting program...");
+        shutDownDaemon();
+        try {
+            Thread.sleep(10*1000);
+        } catch (InterruptedException e) {
+        }
+        logger.info("program shutdown, starting to run start script");
+        String appHome=System.getProperty("user.dir");
+        String scriptPath=appHome+ File.separator+"bin"+File.separator+"shutdown";
+        File home=new File(appHome);
+        Path logDir=home.toPath().resolve("logs");
+        if(!logDir.toFile().exists())logDir.toFile().mkdir();
+        String cmd[]=new String[]{"/bin/bash",scriptPath,pid};
+        try {
+            new ProcessBuilder(cmd)
+                    .directory(home)
+                    .redirectErrorStream(true)
+                    .redirectOutput(logDir.resolve("restart.log").toFile())
+                    .start();
+        } catch (IOException e) {
+            logger.error("error restart program with exception:",e);
+            return getResponse(400, "service had been stopped", e);
+        }
+        return getResponse(200, "service had been stopped", null);
     }
 
     /**

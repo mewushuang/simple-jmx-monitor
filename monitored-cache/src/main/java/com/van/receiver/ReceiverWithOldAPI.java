@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.task.TaskRejectedException;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 @Component
 public class ReceiverWithOldAPI {
@@ -47,9 +49,16 @@ public class ReceiverWithOldAPI {
     }
 
     @PostConstruct
-    public void init(){
+    public void init() {
         connector = Consumer.createJavaConsumerConnector(new ConsumerConfig(kafkaConfig.getConsumer()));
-        executor = Executors.newFixedThreadPool(2);
+        executor = Executors.newFixedThreadPool(2, new ThreadFactory() {
+            @Override
+            public Thread newThread(Runnable r) {
+                ThreadGroup group = new ThreadGroup("data-consumer-pool");
+                Thread t = new Thread(group, r);
+                return t;
+            }
+        });
     }
 
     /**
@@ -69,34 +78,42 @@ public class ReceiverWithOldAPI {
         //启动rt解析线程
         KafkaStream<byte[], byte[]> kafkaStream = consumerMap.get(rtData).get(0);
         final ConsumerIterator<byte[], byte[]> rt = kafkaStream.iterator();
-        consume0(rt);
+        consume0(rt, rtData);
 
         //启动seat解析线程
-        KafkaStream<byte[], byte[]> kafkaStream2 = consumerMap.get(rtData).get(0);
+        KafkaStream<byte[], byte[]> kafkaStream2 = consumerMap.get(seatData).get(0);
         final ConsumerIterator<byte[], byte[]> seat = kafkaStream2.iterator();
-        consume0(seat);
+        consume0(seat, seatData);
 
-        if (logger.isInfoEnabled()) {
-            logger.info("waiting for msg on topic: " + rtData + "," + seatData);
-        }
+
     }
 
-    private void consume0(final ConsumerIterator<byte[], byte[]> it) {
+    private void consume0(final ConsumerIterator<byte[], byte[]> it, final String topic) {
         executor.execute(new Runnable() {
             @Override
             public void run() {
+                logger.info("waiting for msg on topic: " + topic + ".");
                 while (it.hasNext() && !closing) {
                     MessageAndMetadata<byte[], byte[]> record = it.next();
+                    if (record == null) continue;
                     String message = new String(record.message());
+                    String key = "";
+                    if (record.key() != null) key = new String(record.key());
                     // 打印获取到的消息
                     if (logger.isDebugEnabled()) {
-                        logger.debug(String.format("offset = %d, key = %s, len of value = %d", record.offset(), new String(record.key()), message.length()));
+                        logger.debug(String.format("offset = %d, key = %s, len of value = %s", record.offset(), key, message));
                     }
-                    Record r = new Record(record.topic(), new String(record.key()), message, record.offset());
-                    taskDefineService.cacheTask(r);
+                    Record r = new Record(record.topic(), key, message, record.offset());
+                    try {
+                        taskDefineService.cacheTask(r);
+                    } catch (TaskRejectedException e) {
+                        logger.error("async task queue is full !",e);
+                    }
                     ReceiverWithOldAPI.this.offset = record.offset();
 
                 }
+                logger.warn("stopped listening on topic:" + topic + ".");
+
             }
         });
     }

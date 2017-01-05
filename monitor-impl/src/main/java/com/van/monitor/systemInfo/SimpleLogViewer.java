@@ -70,8 +70,8 @@ public class SimpleLogViewer extends ResponseJsonSerialization implements LogVie
                 l.close();
             }
             this.cache.clear();
-            log.info("files closed and cache cleared");
         }
+        log.info("files closed and cache cleared");
     }
 
     private void addToCache(File f) {

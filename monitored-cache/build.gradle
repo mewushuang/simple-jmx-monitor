@@ -24,11 +24,12 @@ repositories {
 }
 
 
+def spingBootVersion="1.4.2.RELEASE"
 dependencies {
     compile fileTree(dir:'lib')
     compile project(":monitor-api")
-    compile("org.springframework.boot:spring-boot-starter")
-    compile("org.springframework.boot:spring-boot-configuration-processor")
+    compile("org.springframework.boot:spring-boot-starter:"+spingBootVersion)
+    compile("org.springframework.boot:spring-boot-configuration-processor:"+spingBootVersion)
 }
 //自定义生产测试两套配置
 def env = System.getProperty("dist") ?"ga":"conf"
@@ -45,10 +46,6 @@ sourceSets {
 mainClassName = 'com.van.Cacher'
 
 
-tasks.withType(JavaCompile) {
-    options.encoding = "UTF-8"
-}
-
 processResources{
     from new File(monitor.buildDir,'conf')
     filter{ String line ->
@@ -64,15 +61,6 @@ processResources{
     into 'build/conf'
 }
 jar.dependsOn copyConf*/
-task copyJars(type: Copy){
-    doFirst{
-        new File('C:\\Users\\van\\Desktop\\temp\\monitor-impl-1.0-release\\lib\\message-persistence-1.0-SNAPSHOT.jar')
-        .delete();
-    }
-    from 'build/libs'
-    into 'C:\\Users\\van\\Desktop\\temp\\monitor-impl-1.0-release\\lib'
-}
-distZip.dependsOn copyJars
 //打包时处理conf文件
 //将本项目生成的jar和依赖 加上 monitor-impl生成的框架 合并到一起打包
 distributions {

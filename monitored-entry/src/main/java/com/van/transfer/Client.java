@@ -84,10 +84,10 @@ public class Client {
                 //循环开始，将状态重置为blocking
                 status.notInAndSet(RunningStatusMetric.RunningStatus.blocking, RunningStatusMetric.RunningStatus.blocking);
 
-                logger.info("接口服务启动，正在监视主服务。。。");
+                logger.info("接口服务["+propertyPrefix+"]启动，正在监视主服务。。。");
                 DistributedSharedLock lock = new DistributedSharedLock(zookeeperServerList, path);
                 lock.acquire();
-                logger.info("获取锁，已提升为主服务。");
+                logger.info("接口服务["+propertyPrefix+"]获取锁，已提升为主服务。");
 
                 service();
                 lock.release();
@@ -119,7 +119,7 @@ public class Client {
             am = AddressManager.instance(cfg,propertyPrefix);
             InetSocketAddress isa = am.getNextAddress();
             if (logger.isInfoEnabled()) {
-                logger.info("starting to connect remote server:" + isa.toString());
+                logger.info("instance["+propertyPrefix+"] starting to connect remote server:" + isa.toString());
             }
             try {
                 ConnectFuture future = connector.connect(isa);
@@ -131,7 +131,7 @@ public class Client {
                 //client放入session，以便异常时重新发起连接
                 //session.setAttribute("client",this);
                 if (logger.isInfoEnabled()) {
-                    logger.info("session initialized with remote address:" + isa.toString());
+                    logger.info("instance["+propertyPrefix+"] session initialized with remote address:" + isa.toString());
                 }
                 am.resetFailedAttemps();
                 // 阻塞在事件循环进程
@@ -140,8 +140,9 @@ public class Client {
             } catch (Exception e) {
                 String msg=e.getMessage();
                 if(e.getCause()!=null) msg=msg+",caused by "+e.getCause().getMessage();
-                logger.warn("Failed when working with " + isa.toString()+", error msg is: "+msg);
+                logger.warn("instance["+propertyPrefix+"] failed when working with " + isa.toString()+", error msg is: "+msg);
                 Thread.sleep(5000);
+
             }
         }
 

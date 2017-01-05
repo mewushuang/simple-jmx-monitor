@@ -51,14 +51,22 @@ public class RtConsumer implements PacketConsumer {
     }
 
 
+    /**
+     * 使用mina后
+     * TextLineCodecFactory codecFactory
+     * = new TextLineCodecFactory(Charset.forName("utf-8"), "\0", "\0");
+     * 该codecFactory会为每一个输入结尾添加'\0', 此处不必手动添加
+     * @param rawMsg
+     * @return
+     */
     @Override
     public String getResponse(String rawMsg) {
 		if(!isValid(rawMsg)){
 			String headName=getHeadName(rawMsg);
-			return answerprefix+getLenStr(headName.length())+headName+answerFailFlag+answerDelimiter;
+			return answerprefix+getLenStr(headName.length())+headName+answerFailFlag;//+answerDelimiter;
 		}else{
 			String headName=getHeadName(rawMsg);
-			return answerprefix+getLenStr(headName.length())+headName+answerSuccFlag+answerDelimiter;
+			return answerprefix+getLenStr(headName.length())+headName+answerSuccFlag;//+answerDelimiter;
 		}
     }
 
@@ -95,7 +103,6 @@ public class RtConsumer implements PacketConsumer {
     public void releaseResource() {
         sender.close();
         logger.info("mq sender closed by rt consumer");
-        //// TODO: 2016/12/13 rtdb不需要释放资源？
     }
 
     @Override

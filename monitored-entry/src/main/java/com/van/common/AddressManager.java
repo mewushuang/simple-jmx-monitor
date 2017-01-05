@@ -16,7 +16,7 @@ import java.util.Map;
 public class AddressManager {
     private static Logger logger= LoggerFactory.getLogger(AddressManager.class);
 
-    private static AddressManager manager;
+    //private static AddressManager manager;
 
     private List<ServerAddress> list;
 
@@ -107,10 +107,10 @@ public class AddressManager {
      */
     public static synchronized AddressManager instance(TransferConfiguration config,String propertyPrefix) {
         if(ams.get(propertyPrefix)==null){
-            manager=reloadFromCfg(config,propertyPrefix);
+            AddressManager manager = reloadFromCfg(config, propertyPrefix);
             ams.put(propertyPrefix,manager);
         }
-        return manager;
+        return ams.get(propertyPrefix);
     }
 
     /**
@@ -137,8 +137,7 @@ public class AddressManager {
         if(list.size()==0){
             throw new IllegalArgumentException("Invalid configuration on server address:"+cfg);
         }
-        manager=new AddressManager(list,config);
-        return manager;
+        return new AddressManager(list,config);
     }
 
 }

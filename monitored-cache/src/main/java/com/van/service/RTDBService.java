@@ -12,7 +12,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.*;
 import java.util.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Created by van on 2016/12/10.
@@ -21,6 +24,9 @@ import java.util.*;
 public class RTDBService {
 
     private final Logger logger = LoggerFactory.getLogger(RTDBService.class);
+    private final Lock tableLock = new ReentrantLock();
+    private final Lock fieldLock = new ReentrantLock();
+
     @Autowired
     private ProducerService producerService;
 
@@ -32,7 +38,8 @@ public class RTDBService {
     private final String TT01 = "8";
     private final String TT02 = "7";
     private final String TT03 = "9";
-    private final String TIME_FIELD = "6";
+    private final String TIME_FIELD_RT = "time";
+    private final String TIME_FIELD_SEAT = "gtime";
 
     /**
      * RTDB查询实例
@@ -66,11 +73,10 @@ public class RTDBService {
         List<String> toNotice = new ArrayList<>();
         Assert.asertNotNull(entity.getType(), "entity type unset");
         Set<String> tableIds = getTableIdsByPId(entity.getScode());
-        if (tableIds == null) {
-            tableIds = new HashSet<>();
-        }
-        if (tableIds.size() == 0) {
-            tableIds.add(entity.getScode());
+
+        if (tableIds == null || tableIds.size() == 0) {
+            logger.error("cannot get table id with scode[" + entity.getScode() + "]");
+            return;
         }
         for (String str : tableIds) {
             Map<String, Map<String, String>> outer = new HashMap<>();
@@ -82,23 +88,24 @@ public class RTDBService {
                 String code;
                 String scode = entity.getScode();
                 Map<String, String> unit = (Map<String, String>) o;
-                unit.put(TIME_FIELD, entity.getTime());
+                unit.put(TIME_FIELD_RT, entity.getTime());
+                unit.put(TIME_FIELD_SEAT, entity.getTime());
                 String keyPrefix = contextId + keyDelimiter + appId + keyDelimiter + str + keyDelimiter + entity.getScode() + "_";
                 if (entity.getType() == ScodeEntity.SEAT_TYPE) {
-                    code = dealSeatUnit(str, scode, unit, outer,toNotice,keyPrefix);
+                    code = dealSeatUnit(str, scode, unit, outer, toNotice, keyPrefix);
                 } else {
-                    code = dealRTUnit(str, scode, unit, outer,toNotice,keyPrefix);
+                    code = dealRTUnit(str, scode, unit, outer, toNotice, keyPrefix);
                 }
 
-                // 通知
-                if (code != null) {
-                    toNotice.add(keyPrefix+code+keyDelimiter+TIME_FIELD);
-                }
 
             }
             //入实时库
             rtdbMerge.mergeTableRecordsById(contextId, appId, str, outer);
+            if(logger.isDebugEnabled()){
+                logger.debug("merged into redis:\n"+entity.getData());
+            }
             producerService.noticeChangedKeys(updateTopic, toNotice);
+
         }
 
     }
@@ -115,13 +122,13 @@ public class RTDBService {
      * @param toNotice  用来批量通知消息队列的list
      * @param keyPrefix 放入toNotice的key的前缀
      */
-    private String dealRTUnit(String tableName, String scode, Map<String, String> unit, Map<String, Map<String, String>> outer,List<String> toNotice,String keyPrefix) {
+    private String dealRTUnit(String tableName, String scode, Map<String, String> unit, Map<String, Map<String, String>> outer, List<String> toNotice, String keyPrefix) {
         String code = unit.get("code");
 
         if (code != null) {
-            keyPrefix=keyPrefix+code;
+            keyPrefix = keyPrefix + code;
             Map<String, String> exists = outer.get(code);
-            Map<String, String> ret = convertMap(tableName, unit, exists,toNotice,keyPrefix);
+            Map<String, String> ret = convertMap(tableName, unit, exists, toNotice, keyPrefix);
             outer.put(scode + "_" + code, ret);
             return code;
         }
@@ -138,7 +145,7 @@ public class RTDBService {
      * @param toNotice  用来批量通知消息队列的list
      * @param keyPrefix 放入toNotice的key的前缀
      */
-    private String dealSeatUnit(String tableName, String scode, Map<String, String> unit, Map<String, Map<String, String>> outer,List<String> toNotice,String keyPrefix) {
+    private String dealSeatUnit(String tableName, String scode, Map<String, String> unit, Map<String, Map<String, String>> outer, List<String> toNotice, String keyPrefix) {
         Object dnum = unit.get("dnum");
         if (dnum == null) return null;
         String code = null;
@@ -162,7 +169,7 @@ public class RTDBService {
                 code = null;
         }
         if (code != null) {
-            keyPrefix=keyPrefix+code;
+            keyPrefix = keyPrefix + code;
             Map<String, String> ret = convertMap(tableName, unit, null, toNotice, keyPrefix);
             outer.put(scode + "_" + code, ret);
             return code;
@@ -176,33 +183,35 @@ public class RTDBService {
      * 并且强行把不同频度的值塞到了一个指标+维度确定的对象里
      *
      * @param src
-     * @param base 如果不为空，表示根据code检索到了数据（已经被put过一次），在base的基础上做更新
+     * @param base      如果不为空，表示根据code检索到了数据（已经被put过一次），在base的基础上做更新
      * @param toNotice
-     *@param keyPrefix @return
+     * @param keyPrefix @return
      */
     private Map<String, String> convertMap(String tableName, Map src, Map base, List<String> toNotice, String keyPrefix) {
         Map<String, String> ret = base == null ? new HashMap<>() : base;
         Map<String, String> map = src;
         for (Map.Entry<String, String> e : map.entrySet()) {
             String key = getFieldIdByTableIdAndJFieldName(tableName, e.getKey());
-            //没找到对应的key原样存入
-            ret.put(key == null ? e.getKey() : key, e.getValue());
-            if(key!=null) toNotice.add(keyPrefix+keyDelimiter+key);
+
+            //只存入有对应关系的数据
+            if (key != null) {
+                ret.put(key, e.getValue());
+                toNotice.add(keyPrefix + keyDelimiter + key);
+            }
         }
         Object tt = map.get("tt");
         if (tt == null) return ret;//没有tt字段
         //“tt”字段说明:  01:天累计， 02：5分钟分段 ，03：月累计。
         if (Objects.equals(tt.toString(), "02")) {
             ret.put(TT02, map.get("v"));
-            toNotice.add(keyPrefix+keyDelimiter+TT02);//添加指标更新通知 细化到field
+            toNotice.add(keyPrefix + keyDelimiter + TT02);//添加指标更新通知 细化到field
         } else if (Objects.equals(tt.toString(), "01")) {
             ret.put(TT01, map.get("v"));
-            toNotice.add(keyPrefix+keyDelimiter+TT01);
+            toNotice.add(keyPrefix + keyDelimiter + TT01);
         } else if (Objects.equals(tt.toString(), "03")) {
             ret.put(TT03, map.get("v"));
-            toNotice.add(keyPrefix+keyDelimiter+TT03);
+            toNotice.add(keyPrefix + keyDelimiter + TT03);
         }
-        ret.remove("v");
         return ret;
     }
 
@@ -215,8 +224,13 @@ public class RTDBService {
      */
     public Set<String> getTableIdsByPId(String v_PId) {
         Set<String> v_TableIds = null;
-        if (pid_TableIds == null) {
-            reloadPTCache();
+        tableLock.lock();
+        try {
+            if (pid_TableIds == null) {
+                reloadPTCache();
+            }
+        } finally {
+            tableLock.unlock();
         }
 
         if (pid_TableIds != null && pid_TableIds.containsKey(v_PId)) {
@@ -262,9 +276,16 @@ public class RTDBService {
      */
     public String getFieldIdByTableIdAndJFieldName(String v_TableId, String v_JFieldName) {
         String v_FieldId = null;
-        if (tableId_JFieldNameDFieldId == null) {
-            reloadFieldCache();
+
+        fieldLock.lock();
+        try {
+            if (tableId_JFieldNameDFieldId == null) {
+                reloadFieldCache();
+            }
+        } finally {
+            fieldLock.unlock();
         }
+
 
         if (tableId_JFieldNameDFieldId != null && tableId_JFieldNameDFieldId.containsKey(v_TableId)) {
             v_FieldId = tableId_JFieldNameDFieldId.get(v_TableId).get(v_JFieldName);
@@ -311,7 +332,21 @@ public class RTDBService {
 
     public static void main(String[] args) {
         RTDBService service = new RTDBService();
-        String pId = "P01_02013"; // 就绪人数 - 指标编码
+        ParseService p=new ParseService();
+        try {
+            BufferedReader src=new BufferedReader(new FileReader(new File("E:\\study\\python\\file_dealing\\one-piece-of-seat-packet.txt")));
+            String i=src.readLine();
+            List<ScodeEntity> e=p.parseRawMsgOfSeat(i);
+            for(ScodeEntity sc:e){
+                service.saveEntity(sc);
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        /*String pId = "P01_02503"; // 就绪人数 - 指标编码
         String dimId = "7110101"; // 北方分中心 - 维度编码
         String recordId = pId + "_" + dimId; // 记录Id
         String jFieldName2 = "gtime";
@@ -326,6 +361,6 @@ public class RTDBService {
             service.rtdbMerge.mergeRecordFieldById(keyId, (new Date().toString()));
             value = service.rtdbQuery.getPointValue(keyId);
             System.out.println(value);
-        }
+        }*/
     }
 }

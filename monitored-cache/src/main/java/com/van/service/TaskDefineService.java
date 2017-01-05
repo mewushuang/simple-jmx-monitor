@@ -41,7 +41,8 @@ public class TaskDefineService {
                 }
             }
         } catch (Exception e) {
-            logger.error(e.getMessage(),e);
+            logger.error("error dealing with record,topic["+record.topic()+"],offset["+record.topic()+"]"+e.getMessage()+"\n\t value is:"+record.value(),e);
+
         }
     }
 }

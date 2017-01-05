@@ -46,7 +46,7 @@ public class SeatConsumer implements PacketConsumer {
 
     @Override
     public String getInitParam() {
-        return config.get(propertyPrefix+"initMsg").toString()+ answerDelimiter;
+        return config.get(propertyPrefix+"initMsg").toString();//+ answerDelimiter;
     }
 
 

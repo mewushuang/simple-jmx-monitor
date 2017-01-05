@@ -16,8 +16,10 @@ public interface ControllerMXBean {
      * 默认启动逻辑：在监控后台启动时被调用一次
      */
     String startDefault();
+
+    String stopDefault();
+
     String stop(String[] args);
-    String restart(String[] args);
     String status(String[] args);
 
     /**
@@ -25,4 +27,10 @@ public interface ControllerMXBean {
      * @return
      */
     void shutDownDaemon();
+
+    /**
+     * 重启进程
+     * @return
+     */
+    String restartDaemon();
 }

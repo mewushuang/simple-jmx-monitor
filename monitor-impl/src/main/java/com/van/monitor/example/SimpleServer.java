@@ -38,9 +38,9 @@ import java.util.concurrent.Executors;
 public class SimpleServer {
 
     private String CONTROLLER_MB_NAME = "com.example";
-    private static final String DAEMON_CONTROLLER_BEAN_NAME="com.daemon.controller";
-
+    private static final String DAEMON_CONTROLLER_BEAN_NAME = "com.daemon.controller";
     private static Logger logger = LoggerFactory.getLogger(SimpleServer.class);
+    private String pid;
 
     private Properties config;
     private ExecutorService mainThread;
@@ -56,21 +56,22 @@ public class SimpleServer {
     public SimpleServer() {
         config = new Properties();
         try {
-            String path = System.getProperty("app.home");
+            String path = System.getProperty("user.dir");
             logger.info("path:" + path);
             if (path == null) {//ide内调试用
                 config.load(new InputStreamReader(
                         SimpleServer.class.getClassLoader().getResourceAsStream("monitor.properties")));
             } else {
-                File cf=new File(path,"conf"+ File.separator+"monitor.properties");
+                File cf = new File(path, "conf" + File.separator + "monitor.properties");
                 config.load(new InputStreamReader(new FileInputStream(cf), Charset.forName("utf-8")));
             }
+            logger.info("config of monitor:\n"+config.toString().replace(',','\n'));
             //获取日志目录的配置
-            String[] dirs=config.getProperty("log.dirs","logs").split(",");
-            logPaths=new Path[dirs.length];
-            Path p= Paths.get(path);
-            for(int i=0;i<dirs.length;i++){
-                logPaths[i]=p.resolve(dirs[i]);
+            String[] dirs = config.getProperty("log.dirs", "logs").split(",");
+            logPaths = new Path[dirs.length];
+            Path p = Paths.get(path);
+            for (int i = 0; i < dirs.length; i++) {
+                logPaths[i] = p.resolve(dirs[i]);
             }
         } catch (IOException e) {
             logger.error("error loading from file classpath:monitor.properties. check if exists or is damaged", e);
@@ -91,10 +92,13 @@ public class SimpleServer {
         String action = System.getProperty("com.van.monitor.server.action", "start");
 
         if ("close".equalsIgnoreCase(action)) {
-            stopDaemon();
+            getControllerMXBean().shutDownDaemon();
+        } else if ("restart".equalsIgnoreCase(action)) {
+            getControllerMXBean().restartDaemon();
         } else {
-            //String url1="service:jmx:rmi:///jndi/rmi://127.0.0.1:"+ getPort()+ "/jmxrmi";
+            //String url1="service:jmx:rmi:///jndi/rmi://127.0.0.1:"+ getUrl()+ "/jmxrmi";
             startDaemon();
+
         }
     }
 
@@ -110,7 +114,7 @@ public class SimpleServer {
         //实例化服务
         String className = config.getProperty("moniteredService.impl", "com.van.monitor.example.DefaultService");
         logger.info("get service className from config:" + className);
-        monitor = new ServerMB(mainThread, className,connectorServer);
+        monitor = new ServerMB(mainThread, className, connectorServer, pid);
 
         //注册服务的controller bean
         String cn = config.getProperty("controllerBean.name", CONTROLLER_MB_NAME);
@@ -133,19 +137,19 @@ public class SimpleServer {
         logger.info("logView bean registered with name:" + lvn);
 
 
-        logger.info("JMX server initialization done on port " + getPort());
+        logger.info("JMX server initialization done on url: " + getUrl());
 
     }
 
     private void initJMX() throws JMException {
-        String port=getPort();
-        JMXServiceURL url=null;
-        String protocol="rmi";
-        String host="127.0.0.1";
-        Map<String,Object> env=new HashMap<>();
+        //127.0.0.1:9999
+        String[] des = getUrl().trim().split(":");
+        JMXServiceURL url = null;
+        System.setProperty("java.rmi.server.hostname", des[0]);
+        Map<String, Object> env = new HashMap<>();
         try {
-            LocateRegistry.createRegistry(Integer.parseInt(port));
-            url=new JMXServiceURL("service:jmx:rmi:///jndi/rmi://127.0.0.1:"+ getPort()+ "/jmxrmi");
+            LocateRegistry.createRegistry(Integer.parseInt(des[1]));
+            url = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://" + getUrl() + "/jmxrmi");
             platformMBeanServer = ManagementFactory.getPlatformMBeanServer();
 
             connectorServer = JMXConnectorServerFactory
@@ -153,20 +157,20 @@ public class SimpleServer {
             connectorServer.start();
             logger.info("rmi connect server started");
         } catch (RemoteException e) {
-            throw new JMException("cannot regist rmi server on port:" +port+"\n"+e.getMessage());
+            throw new JMException("cannot register rmi server on url:" + getUrl() + "\n" + e.getMessage());
         } catch (MalformedURLException e) {
-            throw new JMException(String.format("invalid params of JMXServiceURL:{protocol:%s,host:%s,port:%s\n%s}",protocol,host,port,e.getMessage()));
+            throw new JMException(String.format("invalid params of JMXServiceURL:{protocol:%s,url:%s\n%s}", "rmi", getUrl(), e.getMessage()));
         } catch (IOException e) {
-            throw new RuntimeException(String.format("invalid params of JMXServiceURL:{protocol:%s,host:%s,port:%s\n%s}",protocol,host,port,e.getMessage()),e);
+            throw new RuntimeException(String.format("invalid params of JMXServiceURL:{protocol:%s,url:%s\n%s}", "rmi", getUrl(), e.getMessage()), e);
         }
     }
 
 
     public void destroy() {
         logger.info("starting to release daemon resource");
-
         mainThread.shutdownNow();
-        logger.info("thread pool shutdown");
+        logger.info("thread pool shutting down");
+
         //关闭日志bean中缓存的日志流
         if (logViewer != null) logViewer.clearCache();
         if (sysInfoMonitor != null) sysInfoMonitor.close();
@@ -174,11 +178,11 @@ public class SimpleServer {
     }
 
 
-
     private static void startDaemon() {
         final SimpleServer simpleServer = new SimpleServer();
         try {
             //初始化
+            simpleServer.getPid();
             simpleServer.init();
 
             //启动服务线程
@@ -200,24 +204,32 @@ public class SimpleServer {
         }
     }
 
-    private static void stopDaemon() {
-        SimpleServer server=new SimpleServer();
+    private static ControllerMXBean getControllerMXBean() {
+        SimpleServer server = new SimpleServer();
         SimpleJMXClient sc = new SimpleJMXClient(
-                "service:jmx:rmi:///jndi/rmi://127.0.0.1:"
-                        + server.getPort()
+                "service:jmx:rmi:///jndi/rmi://"
+                        + server.getUrl()
                         + "/jmxrmi");
         String cn = server.config.getProperty("controllerBean.name");
-        if(cn==null){
+        if (cn == null) {
             logger.error("please set value of key 'controllerBean.name' in file monitor.properties");
-            return;
+            throw new IllegalArgumentException("please set value of key 'controllerBean.name' in file monitor.properties");
         }
         //TODO c/s端的beanname统一。监控平台化：服务间的日志隔离
         ControllerMXBean cm = sc.getMBean(ControllerMXBean.class, cn + ControllerMXBean.BEAN_TYPE);
-        cm.shutDownDaemon();
+        return cm;
     }
 
-    private String getPort(){
+    private String getUrl() {
         //System.getProperty("com.van.monitor.server.port")
-        return config.getProperty("server.port","9999");
+        return config.getProperty("server.url", "127.0.0.1:9999");
+    }
+
+    private String getPid() {
+        String name = ManagementFactory.getRuntimeMXBean().getName();
+        String pid = name.split("@")[0];
+        System.out.println("Pid is:" + pid);
+        this.pid=pid;
+        return pid;
     }
 }
