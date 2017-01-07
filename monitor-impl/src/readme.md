@@ -19,3 +19,4 @@ config.load(new InputStreamReader(new FileInputStream(path+"monitor.properties")
 ###tips
 1. windows不支持后台进程重启
 2. 起停脚本都要赋执行权限
+3. 简单起见，目前文件上传是一次性（上传文件一般不会过大），文件下载则是分批进行。

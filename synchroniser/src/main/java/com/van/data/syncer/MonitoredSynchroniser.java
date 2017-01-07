@@ -71,7 +71,8 @@ public class MonitoredSynchroniser implements MonitoredService {
         //添加一个参数用以定位application.yaml
         String[] args=addSpringBootArg(strings);
         try {
-            this.applicationContext = SpringApplication.run(Synchroniser.class, args);
+
+            this.applicationContext = Synchroniser.run(args);
             TaskManager taskManager = applicationContext.getBean(TaskManager.class);
             SchedulerFactory factory = new StdSchedulerFactory();
             this.scheduler = factory.getScheduler();

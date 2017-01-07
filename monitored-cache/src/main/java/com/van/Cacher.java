@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ApplicationContext;
 
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executor;
@@ -21,6 +22,7 @@ public class Cacher implements MonitoredService {
     private final Logger logger = LoggerFactory.getLogger(Cacher.class);
 
     private ApplicationContext applicationContext;
+    private final String conf="--spring.config.location=";
     private ReceiverWithOldAPI receiver;
 
     private RunningStatusMetric.RunningStatus status;
@@ -69,8 +71,9 @@ public class Cacher implements MonitoredService {
         }
 
         try {
-            System.setProperty("spring.config.location",System.getProperty("app.home")+"/conf");
-            this.applicationContext = SpringApplication.run(SpringApp.class, strings);
+            strings=addSpringBootArg(strings);
+            //正式环境有日志系统，此处移除了springboot自带的日志系统
+            this.applicationContext = SpringApp.run(strings);
             this.receiver = applicationContext.getBean(ReceiverWithOldAPI.class);
             synchronized (lock) {
                 this.status = RunningStatusMetric.RunningStatus.running;
@@ -123,5 +126,14 @@ public class Cacher implements MonitoredService {
         public Level getLevel() {
             return Level.info;
         }
+    }
+
+    private String[] addSpringBootArg(String[] args){
+        int len=0;
+        if(args!=null) len= args.length;
+        String[] ret=new String[len+1];
+        System.arraycopy(args,0,ret,0,args.length);
+        ret[len]= conf+ Paths.get(System.getProperty("user.dir"),"conf","application.yaml").toAbsolutePath().toString();
+        return ret;
     }
 }

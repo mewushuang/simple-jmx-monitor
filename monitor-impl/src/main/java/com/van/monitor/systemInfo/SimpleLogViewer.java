@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 /**
@@ -17,18 +18,37 @@ import java.util.*;
 public class SimpleLogViewer extends ResponseJsonSerialization implements LogViewerMXBean {
 
     private Logger log = LoggerFactory.getLogger(SimpleLogViewer.class);
+
+    private RmiFileTransfer fileTransfer;
+
     private ObjectMapper mapper = new ObjectMapper();
+
+    //key为相对root的相对路径
     private Map<String, LogFile> cache;
     //private String[] filesStr;//数据库配置的obj字符串 用';'分隔目录/文件 如：/test.log;/tmp/1.log
     private Path[] paths;
+    private Path root;
+    private String[] dirs;
 
 
     //缓存允许的层数，防止用户直接将根目录一类的东西直接配成日志目录
     private final int maxRecursiveDepth = 3;
     private int recursiveDepth = 1;
 
-    public SimpleLogViewer(Path... path) {
-        this.paths = path;
+    /**
+     *
+     * @param root 环境变量配置的user.dir 或者 app.home
+     * @param children monitor.properties 中配置的log.dirs
+     */
+    public SimpleLogViewer(String root,String children) {
+        this.root = Paths.get(root);
+
+        this.dirs = children.split(",");
+        paths = new Path[dirs.length];
+        for (int i = 0; i < dirs.length; i++) {
+            paths[i] = this.root.resolve(dirs[i]);
+        }
+        fileTransfer=new RmiFileTransfer();
     }
 
 
@@ -71,13 +91,14 @@ public class SimpleLogViewer extends ResponseJsonSerialization implements LogVie
             }
             this.cache.clear();
         }
-        log.info("files closed and cache cleared");
+        log.info("log files closed and cache cleared");
+        fileTransfer.close();
     }
 
     private void addToCache(File f) {
         if (!f.exists()) return;
         if (f.isFile()) {
-            String key = f.getAbsolutePath();
+            String key = root.relativize(f.toPath()).toString();
             if (!cache.containsKey(key)) {//缓存没有则添加LogFile，其默认iteratored为true
                 cache.put(key, new LogFile(f));
             } else {//缓存中有的更新为true
@@ -110,6 +131,11 @@ public class SimpleLogViewer extends ResponseJsonSerialization implements LogVie
         return response;
     }
 
+    @Override
+    public String getParentPaths() {
+        return getSuccResponse(dirs);
+    }
+
     /**
      * offset重置为文件开头
      *
@@ -122,17 +148,29 @@ public class SimpleLogViewer extends ResponseJsonSerialization implements LogVie
         return getSuccResponse(null);
     }
 
-    /**
-     * jmx远程循环调用此方法用以下载日志文件
-     * 字节数组长度为0文件结束
-     *
-     * @param filename
-     * @return
-     */
+
     @Override
-    public byte[] downloadRecursive(String filename) {
-        // TODO: 2016/11/17
-        return new byte[0];
+    public byte[] downloadRecursive(String requestId) {
+        return fileTransfer.downloadRecursive(requestId);
+    }
+
+    @Override
+    public String startDownload(String filename) {
+        log.info("asking for download file["+filename+"]");
+        return fileTransfer.askForDownload(root.resolve(filename).toFile());
+    }
+
+    @Override
+    public String endDownload(String requestId) {
+        return fileTransfer.endDownload(requestId);
+    }
+
+    @Override
+    public String uploadFile(String parent, String filename, byte[] data) {
+        File pnt=root.resolve(parent).toFile();
+        if(!pnt.exists()) pnt.mkdir();
+        File des=pnt.toPath().resolve(filename).toFile();
+        return fileTransfer.uploadFile(des,data);
     }
 
     /**

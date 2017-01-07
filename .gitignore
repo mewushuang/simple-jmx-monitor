@@ -11,6 +11,7 @@
 .idea/modules/
 .idea/uiDesigner.xml
 .idea/workspace.xml
+.idea/vcs.xml
 logs/
 monitor-api/build/
 monitor-impl/build/
@@ -26,3 +27,4 @@ monitored-entry/lib/
 monitored-entry/src/main/resources/
 monitored-entry/src/test/
 recv/
+

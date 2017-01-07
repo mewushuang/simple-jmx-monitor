@@ -35,7 +35,7 @@ if [ -n "\$1" ] ; then
     fi
     file_num=`ls \$APP_HOME/upload | wc -l`
     if [ \$file_num -gt 0 ] ; then
-      cp -r \$APP_HOME/upload/* \$APP_HOME/e;rm -rf \$APP_HOME/upload/*
+      \\cp -r \$APP_HOME/upload/* \$APP_HOME/lib;rm -rf \$APP_HOME/upload/*
     fi
     /bin/bash \$APP_HOME/bin/monitor-impl >/dev/null
     exit

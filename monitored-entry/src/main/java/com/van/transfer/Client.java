@@ -20,7 +20,6 @@
 package com.van.transfer;
 
 import com.van.common.AddressManager;
-import com.van.common.DistributedSharedLock;
 import com.van.monitor.api.RunningStatusMetric;
 import com.van.monitor.api.SimpleAtomicStatus;
 import com.van.service.TransferConfiguration;
@@ -85,12 +84,12 @@ public class Client {
                 status.notInAndSet(RunningStatusMetric.RunningStatus.blocking, RunningStatusMetric.RunningStatus.blocking);
 
                 logger.info("接口服务["+propertyPrefix+"]启动，正在监视主服务。。。");
-                DistributedSharedLock lock = new DistributedSharedLock(zookeeperServerList, path);
-                lock.acquire();
+                //DistributedSharedLock lock = new DistributedSharedLock(zookeeperServerList, path);
+                //lock.acquire();
                 logger.info("接口服务["+propertyPrefix+"]获取锁，已提升为主服务。");
 
                 service();
-                lock.release();
+                //lock.release();
             } catch (Throwable e) {
                 logger.warn("blocking interrupted or service occurs error, retrying to acquire the lock", e);
             }

@@ -35,7 +35,7 @@ sourceSets {
 processResources{
     from new File(monitor.buildDir,'conf')
     filter{ String line ->
-        line.startsWith('moniteredService.impl')?'moniteredService.impl='+mainClassName:line.startsWith('server.port')?'server.port=9529':line
+        line.startsWith('moniteredService.impl')?'moniteredService.impl='+mainClassName:line.startsWith('server.url')?'server.url=127.0.0.1:9529':line
     }
     filter{String line ->
         line.startsWith('controllerBean.name')?'controllerBean.name=data.datareceiveserver':line

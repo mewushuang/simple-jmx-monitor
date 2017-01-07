@@ -8,9 +8,15 @@ public interface LogViewerMXBean {
 
     /**
      * 获取日志文件列表
-     * @return 日志文件列表
+     * @return 日志文件列表,路径相对root(程序根目录)
      */
     String getLogFiles();
+
+    /**
+     * 获取配置的可查看文件的目录
+     * @return
+     */
+    String getParentPaths();
 
     /**
      * offset重置为文件开头
@@ -18,13 +24,23 @@ public interface LogViewerMXBean {
      */
     String  reset(String filename);
 
+
     /**
-     * jmx远程循环调用此方法用以下载日志文件
-     * 字节数组长度为0文件结束
-     * @param filename
-     * @return
+     * 暂定为只允许单用户同步下载
+     * 下载过程：
+     * 1.请求request id askForDownload()
+     * 2.根据id多次调用downloadRecursive()获取数据
+     * 3.返回空或空数组时调用endDownload释放资源，获取结果
+     * <p>
+     * 上传:
+     * uploadFile()
+     * <p>
      */
-    byte[] downloadRecursive(String filename);
+    byte[] downloadRecursive(String requestId);
+    String startDownload(String fullFileName);
+    String endDownload(String requestId);
+
+    String uploadFile(String path,String filename,byte[] data);
 
     /**
      * 设置查看日志的起点 如0.25即为再调用getNext时的起点位该日志文件的1/4处

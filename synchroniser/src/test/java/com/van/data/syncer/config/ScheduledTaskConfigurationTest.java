@@ -1,11 +1,11 @@
 package com.van.data.syncer.config;
 
-import com.rtdb.interfaces.query.ConcreteRtdbQuery;
-import com.rtdb.interfaces.query.RtdbQuery;
 import org.junit.Test;
 
 import java.lang.management.ManagementFactory;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Hashtable;
+import java.util.Set;
 
 /**
  * Created by van on 2016/12/27.
@@ -46,7 +46,7 @@ public class ScheduledTaskConfigurationTest {
     public Set<String> getTableIdsByPId(String v_PId) {
         Set<String> v_TableIds = null;
         if (pid_TableIds == null) {
-            reloadPTCache();
+            //reloadPTCache();
         }
 
         if (pid_TableIds != null && pid_TableIds.containsKey(v_PId)) {
@@ -56,31 +56,6 @@ public class ScheduledTaskConfigurationTest {
         return v_TableIds;
     }
 
-    /**
-     * 重新加载指标-数据库表名映射关系
-     */
-    public void reloadPTCache() {
-        pid_TableIds = new Hashtable<String, Set<String>>();
-        RtdbQuery rtdbQuery = new ConcreteRtdbQuery();
-        Map<String, Map<String, String>> dataMap = rtdbQuery.getTableRecordsById(null, null, "9999");
-        Iterator<String> iterator = dataMap.keySet().iterator();
-        while (iterator.hasNext()) {
-            String key = iterator.next();
-            Map<String, String> record = dataMap.get(key);
-            if (record != null && !record.isEmpty()) {
-                String pId = record.get("PID");
-                String tableId = record.get("TID");
 
-                if (tableId != null && !tableId.isEmpty()) {
-                    if (!pid_TableIds.containsKey(pId)) {
-                        Set<String> tableIds = new HashSet<String>();
-                        tableIds.add(tableId);
-                        pid_TableIds.put(pId, tableIds);
-                    } else {
-                        pid_TableIds.get(pId).add(tableId);
-                    }
-                }
-            }
-        }
-    }
+
 }

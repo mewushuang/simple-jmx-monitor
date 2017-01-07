@@ -23,7 +23,6 @@ import java.lang.management.ManagementFactory;
 import java.net.MalformedURLException;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.util.HashMap;
@@ -51,12 +50,14 @@ public class SimpleServer {
     private ServerMB monitor;
     private MBeanServer platformMBeanServer;
     private JMXConnectorServer connectorServer;
+    private String path;
+    private String logDirs;
 
 
     public SimpleServer() {
         config = new Properties();
         try {
-            String path = System.getProperty("user.dir");
+            path = System.getProperty("user.dir");
             logger.info("path:" + path);
             if (path == null) {//ide内调试用
                 config.load(new InputStreamReader(
@@ -67,12 +68,7 @@ public class SimpleServer {
             }
             logger.info("config of monitor:\n"+config.toString().replace(',','\n'));
             //获取日志目录的配置
-            String[] dirs = config.getProperty("log.dirs", "logs").split(",");
-            logPaths = new Path[dirs.length];
-            Path p = Paths.get(path);
-            for (int i = 0; i < dirs.length; i++) {
-                logPaths[i] = p.resolve(dirs[i]);
-            }
+            logDirs = config.getProperty("log.dirs", "logDirs");
         } catch (IOException e) {
             logger.error("error loading from file classpath:monitor.properties. check if exists or is damaged", e);
         }
@@ -130,7 +126,7 @@ public class SimpleServer {
         logger.info("sysInfo bean registered with name:" + sin);
 
         //注册日志查看bean
-        logViewer = new SimpleLogViewer(logPaths);
+        logViewer = new SimpleLogViewer(path,logDirs);
         String lvn = config.getProperty("logViewerBean.name", LogViewerMXBean.BEAN_NAME);
         ObjectName n3 = new ObjectName(lvn);
         platformMBeanServer.registerMBean(logViewer, n3);
