@@ -2,9 +2,10 @@
 this is client side of a simple jmx monitor , [here is the server side](https://github.com/mewushuang/monitor-center).
 #使用说明：
 ###功能
-*  查看服务状态，控制服务起停
-*  查看日志，提供下载、删除、检索
-*  上传并更新程序包
+* 查看服务状态，控制服务起停
+* 查看日志，提供下载、删除、检索
+* 上传并更新程序包
+
 ###部署
 将你的服务打包，入口类需要实现*com.van.monitor.api.MonitoredService*接口。
 将打好的jar包放到lib目录下，并在conf/monitior.properties文件中将入口类
