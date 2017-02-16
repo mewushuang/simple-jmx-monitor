@@ -16,5 +16,5 @@ this is client side of a simple jmx monitor , [here is the server side](https://
 * 修改conf/monitor.properties中的url为本机,objectName为一个可以保证不重复的名字,如该服务的包名.此处配置的objectName应与monitor_center前端新建服务时填写的objectName一致。
 
 ## 其它
-* 脚本中传递了程序主路径作为虚拟机参数, 可以在程序中引用.
+* 脚本中传递了程序主路径作为虚拟机参数, 可以在程序中引用. 所有参数参考monitor-impl下的build.gradle文件
 * 仔细编写MonitoredService的实现类,确保获取到的状态与运行状态一致,确保stop时可以释放所有资源关闭所有线程
