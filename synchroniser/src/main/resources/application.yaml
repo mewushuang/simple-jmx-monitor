@@ -2,28 +2,44 @@
 spring:
   datasource:
     # 主数据源，默认的（同步业务的源数据源）
+    #src:
+      #driver-class-name: oracle.jdbc.driver.OracleDriver
+      #url: "jdbc:oracle:thin:@10.90.133.29:1521/ccmsdb"
+      #username: omsccmsselect
+      #password: omsccmsselect
+    # 自定义数据源（同步业务的目标数据源）
+    #des:
+      #driver-class-name: oracle.jdbc.driver.OracleDriver
+      #url: "jdbc:oracle:thin:@10.90.85.231:1521/orcl"
+      #username: yydk
+      #password: yydk
     src:
       driver-class-name: oracle.jdbc.driver.OracleDriver
-      url: "jdbc:oracle:thin:@10.90.85.234:10026/ccmsdb"
-      username: omsccmsselect
-      password: omsccmsselect
-    # 自定义数据源（同步业务的目标数据源）
+      url: "jdbc:oracle:thin:@localhost:1521/xe"
+      username: van
+      password: 123456
     des:
       driver-class-name: oracle.jdbc.driver.OracleDriver
-      url: "jdbc:oracle:thin:@192.168.139.128:1521/orcl"
-      username: yydk
-      password: yydk
+      url: "jdbc:oracle:thin:@localhost:1521/xe"
+      username: van
+      password: 123456
+
 
 sync:
-  size: 1000
+  batchSize: 1000
   tasks:
+    -
+      name: test_sync_date
+      des: test_sync_date_des
+      cron: "0 * * * * ?"
+      sql: "select 1 as id,sysdate as sync_date from test_sync_date"
     -
       #班组维护表、座席明细信息表同步周期：一天两次，时间：12:00与24:00
       name: team-meta-sync
       des: TEAM_INFO
       cron: "0 0 0,12 * * ?"
       #cron: "0 * * * * ?"
-      sql: "SELECT SHT.ID AS ID,
+      sql: "SELECT sysdate as sync_date,SHT.ID AS ID,
                   SHT.NODE_NAME AS NODE_NAME,
                   SHT.ORGAN_CODE AS ORGAN_CODE,
                   SHT.PARENT_ID AS PARENT_ID,
@@ -44,7 +60,7 @@ sync:
       des: SEAT_INFO
       cron: "0 0 0,12 * * ?"
       #cron: "20 * * * * ?"
-      sql: "SELECT ASEI.ID AS ID,
+      sql: "SELECT ASEI.ID AS ID,sysdate as sync_date,
                   ASEI.SEAT_EMP_NO AS SEAT_NO,
                   MU.USER_NAME AS SEAT_NAME,
                   SHBI.GROUP_NO AS GROUP_NO,
@@ -68,7 +84,7 @@ sync:
       des: SEAT_SCHEDULE
       cron: "0 0 2 * * ?"
       #cron: "40 * * * * ?"
-      sql: "SELECT MENWD.TEMP_ID       AS TEMP_ID,
+      sql: "SELECT MENWD.TEMP_ID       AS TEMP_ID,sysdate as sync_date,
                   MENWD.EMP_NO        AS EMP_NO,
                   MENWD.EMP_NAME      AS EMP_NAME,
                   MENWD.MODEL_ID      AS MODEL_ID,
@@ -93,7 +109,7 @@ sync:
       cron: "0 0,30 * * * ?"
       #cron: "50 * * * * ?"
       sql: "SELECT
-              DISTINCT MU.USER_ID AS SEAT_NO,
+              DISTINCT MU.USER_ID AS SEAT_NO,sysdate as sync_date, 
                           MU.USER_NAME AS SEAT_NAME,
                           ASEI.STAR_LEAVEL AS SKILL_GRADE_CODE,
                           SKILL_TEMP.AREA_SKILL AS TECHNI_SKI_CODE,

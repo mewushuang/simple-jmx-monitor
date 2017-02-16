@@ -1,5 +1,6 @@
 package com.van;
 
+import com.van.common.SeatRecorder;
 import com.van.monitor.api.Metric;
 import com.van.monitor.api.MonitoredService;
 import com.van.monitor.api.RunningStatusMetric;
@@ -125,6 +126,7 @@ public class DataReceiver implements MonitoredService {
         final  DataReceiver d=new DataReceiver();
         ExecutorService threadPool = Executors.newFixedThreadPool(5);
         d.startDefault(threadPool);
+
         /*new Thread(){
             @Override
             public void run() {

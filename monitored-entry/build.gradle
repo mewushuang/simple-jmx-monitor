@@ -15,6 +15,7 @@ ext{
 dependencies {
     compile fileTree(dir: './lib')
     compile project(":monitor-api")
+    compile fileTree(dir: new File(monitor.projectDir,'libs'))
 }
 
 //自定义生产测试两套配置
@@ -33,7 +34,7 @@ sourceSets {
 //java插件---------------
 //配置processResource
 processResources{
-    from new File(monitor.buildDir,'conf')
+    from new File(monitor.buildDir,'conf/monitor.properties')
     filter{ String line ->
         line.startsWith('moniteredService.impl')?'moniteredService.impl='+mainClassName:line.startsWith('server.url')?'server.url=127.0.0.1:9529':line
     }
@@ -55,9 +56,6 @@ distributions {
                 into 'conf'
             }
             from(new File (monitor.buildDir,'/libs')){
-                into 'lib'
-            }
-            from(new File (monitor.projectDir,'/libs')){
                 into 'lib'
             }
             from(new File (monitor.buildDir,'/scripts')){

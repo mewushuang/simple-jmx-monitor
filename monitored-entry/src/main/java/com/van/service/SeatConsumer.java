@@ -1,6 +1,7 @@
 package com.van.service;
 
 import com.van.common.PacketRecorder;
+import com.van.common.SeatRecorder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +33,7 @@ public class SeatConsumer implements PacketConsumer {
         if(config.getInt(propertyPrefix+"logRecordPacket")==1){
             this.logPackets=true;
         }
-        this.recorder=PacketRecorder.instance(config.getString(propertyPrefix+"logNamePrefix"));
+        this.recorder=new SeatRecorder();
 	}
 
 	public synchronized com.van.common.kafka.Sender getSender(){

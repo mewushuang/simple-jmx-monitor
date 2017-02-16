@@ -1,3 +1,4 @@
+/*
 buildscript {
     repositories {
         mavenCentral()
@@ -6,13 +7,21 @@ buildscript {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:1.4.2.RELEASE")
     }
 }
+apply plugin: 'org.springframework.boot'
+*/
+
+
 apply plugin: 'application'
 apply plugin: 'idea'
-apply plugin: 'org.springframework.boot'
 repositories {
     maven{
         url="http://maven.aliyun.com/nexus/content/groups/public/"
     }
+}
+ext{
+    monitor=project(':monitor-impl')
+    ctrlname= 'data.dbsynchroniser'
+    monitorPort=9531
 }
 def spingBootVersion="1.4.2.RELEASE"
 def spingVersion="4.3.4.RELEASE"
@@ -24,20 +33,16 @@ dependencies {
     compile "org.springframework.boot:spring-boot-configuration-processor:"+spingBootVersion
     compile project(":monitor-api")
     compile fileTree(dir: './lib')
+    compile fileTree(dir: new File(monitor.projectDir,'libs'))
 }
 
 
-ext{
-    monitor=project(':monitor-impl')
-    ctrlname= 'data.dbsynchroniser'
-    monitorPort=9531
-}
 mainClassName = 'com.van.data.syncer.MonitoredSynchroniser'
 compileJava.dependsOn(processResources)
 processResources{
-    from new File(monitor.buildDir,'conf')
+    from new File(monitor.buildDir,'conf/monitor.properties')
     filter{ String line ->
-        line.startsWith('server.port')?'server.port='+monitorPort:line.startsWith('moniteredService.impl')?'moniteredService.impl='+mainClassName:line
+        line.startsWith('server.port')?'server.url=127.0.0.1:'+monitorPort:line.startsWith('moniteredService.impl')?'moniteredService.impl='+mainClassName:line
     }
     filter{String line ->
         line.startsWith('controllerBean.name')?'controllerBean.name='+ctrlname:line
@@ -52,9 +57,6 @@ distributions {
                 into 'conf'
             }
             from(new File (monitor.buildDir,'/libs')){
-                into 'lib'
-            }
-            from(new File (monitor.projectDir,'/libs')){
                 into 'lib'
             }
             from(new File (monitor.buildDir,'/scripts')){

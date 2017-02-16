@@ -81,7 +81,7 @@ public class Synchroniser {
         if(args!=null) len= args.length;
         String[] ret=new String[len+1];
         System.arraycopy(args,0,ret,0,args.length);
-        ret[len]= "--spring.config.location="+ Paths.get(System.getProperty("user.dir"),"conf","application.yaml").toAbsolutePath().toString();
+        ret[len]= "--spring.config.location="+ Paths.get(System.getProperty("user.dir"),"conf", "application111.yaml").toAbsolutePath().toString();
         System.out.println(ret[len]);
         return ret;
     }

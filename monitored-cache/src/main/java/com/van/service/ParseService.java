@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.van.common.JsonParseExcepion;
 import com.van.common.ScodeEntity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -16,7 +18,7 @@ import java.util.List;
 @Service
 public class ParseService {
 
-    //private final Logger logger= LoggerFactory.getLogger(ParseService.class);
+    private final Logger logger= LoggerFactory.getLogger(ParseService.class);
 
 
     private ObjectMapper mapper=new ObjectMapper();
@@ -31,6 +33,7 @@ public class ParseService {
      * @return
      */
     public ScodeEntity parseRawMsgOfRt(String scode, String rawMsg) {
+        long start=System.currentTimeMillis();
         try {
             JsonNode root = mapper.readTree(rawMsg);
 
@@ -39,6 +42,8 @@ public class ParseService {
             entity.setType(ScodeEntity.RT_TYPE);
             entity.setTime(root.get("time").asText());
             entity.setData(mapper.convertValue(root.get("data"),List.class));
+            logger.trace("parse  rt  consumed:"+(System.currentTimeMillis()-start)+"ms,length:"+rawMsg.length());
+
             return entity;
         } catch (IOException e) {
             throw new JsonParseExcepion("parse failure on rt data:"+scode+"msg:\n"+rawMsg);
@@ -54,6 +59,7 @@ public class ParseService {
      * @return
      */
     public List<ScodeEntity> parseRawMsgOfSeat(String rawMsg)  {
+        long start=System.currentTimeMillis();
         try {
             JsonNode root = mapper.readTree(rawMsg);
             List<ScodeEntity> ret=new ArrayList<>(10);
@@ -66,6 +72,7 @@ public class ParseService {
                 entity.setData(mapper.convertValue(node.get("data"),List.class));
                 ret.add(entity);
             }
+            logger.trace("parse seat consumed:"+(System.currentTimeMillis()-start)+"ms,length:"+rawMsg.length());
             return ret;
         } catch (IOException e){
             throw new JsonParseExcepion("parse failure on seat data msg:\n"+rawMsg);

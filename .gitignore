@@ -17,14 +17,7 @@ monitor-api/build/
 monitor-impl/build/
 monitor-impl/libs/
 monitor-impl/src/test/
-monitored-cache/build/
-monitored-cache/conf/
-monitored-cache/lib/
-monitored-cache/src/main/resources/
-monitored-cache/src/test/
-monitored-entry/build/
-monitored-entry/lib/
-monitored-entry/src/main/resources/
-monitored-entry/src/test/
+monitored-cache/
+monitored-entry/
 recv/
 

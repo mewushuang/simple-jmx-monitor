@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 /**
  * Created by van on 2016/12/27.
  */
@@ -26,7 +28,11 @@ public class TaskManager {
     public void start(Scheduler scheduler) throws SchedulerException {
         this.scheduler = scheduler;
         scheduler.start();
-        for (ScheduledTaskConfiguration.ScheduledTask task : taskConfiguration.getTasks()) {
+        List<ScheduledTaskConfiguration.ScheduledTask> tasks = taskConfiguration.getTasks();
+        if(tasks==null||tasks.size()==0){
+            logger.error("no task configured, check the configuration file");
+        }
+        for (ScheduledTaskConfiguration.ScheduledTask task : tasks) {
             addJob(task);
         }
         scheduler.start();

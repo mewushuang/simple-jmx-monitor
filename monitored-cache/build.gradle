@@ -1,16 +1,22 @@
 group 'yydk'
 version '1.0-release'
+/*
 buildscript {
     repositories {
-        mavenCentral()
+        maven{
+            url="http://maven.aliyun.com/nexus/content/groups/public/"
+        }
     }
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:1.4.2.RELEASE")
     }
 }
+apply plugin: 'org.springframework.boot'
+*/
+
+
 apply plugin: 'application'
 apply plugin: 'idea'
-apply plugin: 'org.springframework.boot'
 
 ext{
     monitor=project(':monitor-impl')
@@ -20,7 +26,6 @@ repositories {
     flatDir {
         dirs 'lib'
     }
-    mavenCentral()
 }
 
 
@@ -28,6 +33,7 @@ def spingBootVersion="1.4.2.RELEASE"
 dependencies {
     compile fileTree(dir:'lib')
     compile project(":monitor-api")
+    compile fileTree(dir: new File(monitor.projectDir,'libs'))
     compile("org.springframework.boot:spring-boot-starter:"+spingBootVersion)
     compile("org.springframework.boot:spring-boot-configuration-processor:"+spingBootVersion)
 }
@@ -47,7 +53,7 @@ mainClassName = 'com.van.Cacher'
 
 
 processResources{
-    from new File(monitor.buildDir,'conf')
+    from new File(monitor.buildDir,'conf/monitor.properties')
     filter{ String line ->
         line.startsWith('server.port')?'server.port=9530':line.startsWith('moniteredService.impl')?'moniteredService.impl='+mainClassName:line
     }
@@ -71,9 +77,6 @@ distributions {
                 into 'conf'
             }
             from(new File (monitor.buildDir,'/libs')){
-                into 'lib'
-            }
-            from(new File (monitor.projectDir,'/libs')){
                 into 'lib'
             }
             from(new File (monitor.buildDir,'/scripts')){

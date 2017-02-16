@@ -67,9 +67,6 @@ public class RTDBService {
      * @param entity
      */
     public void saveEntity(ScodeEntity entity) {
-        if (logger.isDebugEnabled()) {
-            logger.debug(entity.toString());
-        }
         List<String> toNotice = new ArrayList<>();
         Assert.asertNotNull(entity.getType(), "entity type unset");
         Set<String> tableIds = getTableIdsByPId(entity.getScode());
@@ -101,9 +98,6 @@ public class RTDBService {
             }
             //入实时库
             rtdbMerge.mergeTableRecordsById(contextId, appId, str, outer);
-            if(logger.isDebugEnabled()){
-                logger.debug("merged into redis:\n"+entity.getData());
-            }
             producerService.noticeChangedKeys(updateTopic, toNotice);
 
         }
@@ -127,9 +121,10 @@ public class RTDBService {
 
         if (code != null) {
             keyPrefix = keyPrefix + code;
-            Map<String, String> exists = outer.get(code);
+            String key = scode + "_" + code;
+            Map<String, String> exists = outer.get(key);
             Map<String, String> ret = convertMap(tableName, unit, exists, toNotice, keyPrefix);
-            outer.put(scode + "_" + code, ret);
+            outer.put(key, ret);
             return code;
         }
         return null;

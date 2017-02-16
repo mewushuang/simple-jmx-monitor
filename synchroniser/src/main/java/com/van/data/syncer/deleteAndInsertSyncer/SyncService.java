@@ -1,5 +1,6 @@
 package com.van.data.syncer.deleteAndInsertSyncer;
 
+import com.van.data.syncer.config.ScheduledTaskConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,9 +25,12 @@ public class SyncService {
     @Qualifier("destinationJdbcTemplate")
     private JdbcTemplate destinationJdbcTemplate;
 
-    @Value("${sync.size}")
     private int size =1000;
 
+    @Autowired
+    public SyncService(ScheduledTaskConfiguration configuration) {
+        this.size=configuration.getBatchSize();
+    }
 
     @Transactional
     public void sync(String sql,String destinationTable){

@@ -37,7 +37,7 @@ if [ -n "\$1" ] ; then
     if [ \$file_num -gt 0 ] ; then
       \\cp -r \$APP_HOME/upload/* \$APP_HOME/lib;rm -rf \$APP_HOME/upload/*
     fi
-    /bin/bash \$APP_HOME/bin/monitor-impl >/dev/null
+    /bin/bash \$APP_HOME/bin/monitor-impl 1>/dev/null 2>\$APP_HOME/logs/system.err
     exit
 fi
 

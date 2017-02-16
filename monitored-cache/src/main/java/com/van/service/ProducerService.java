@@ -41,7 +41,7 @@ public class ProducerService {
 
     public void send(String topic,String key,String value){
         if (logger.isDebugEnabled()) {
-            logger.debug("send msg to MQ with key: "+key+" value:\n"+value);
+            //logger.debug("send msg to MQ with key: "+key+" value:\n"+value);
 
         }
         producer.send(new KeyedMessage<>(topic, key, value));

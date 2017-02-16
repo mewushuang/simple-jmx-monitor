@@ -64,10 +64,8 @@ public class Target {
             }
             //此时notNull是数组中最后一个非空值的下标
             SqlParameterSource[] ret=Arrays.copyOfRange(rowsToInsert, 0, notNull + 1);
-            for(SqlParameterSource s:ret){
-                logger.warn(s.toString());
-            }
-            logger.error(String.format("notNull : %d, ret size: %d",notNull,ret.length));
+
+            //logger.error(String.format("notNull : %d, ret size: %d",notNull,ret.length));
             jdbcInsert.executeBatch(ret);
             if (logger.isDebugEnabled()) {
                 logger.debug("batch insert on table " + tableName + " complete");

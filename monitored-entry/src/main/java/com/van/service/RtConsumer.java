@@ -1,10 +1,14 @@
 package com.van.service;
 
 import com.van.common.PacketRecorder;
+import com.van.common.RtRecorder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 /**
+ * 通过控制com.van.common.SeatRecorder的logger的appender达到控制输入目标和保存策略
  * Created by rabit on 2016/6/2.
  */
 public class RtConsumer implements PacketConsumer {
@@ -42,7 +46,7 @@ public class RtConsumer implements PacketConsumer {
         if(config.getInt(propertyPrefix+"logRecordPacket")==1){
             this.logPackets=true;
         }
-        this.recorder=PacketRecorder.instance(config.getString(propertyPrefix+"logNamePrefix"));
+        this.recorder=new RtRecorder();
 	}
 
     @Override

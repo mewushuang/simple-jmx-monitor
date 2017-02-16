@@ -27,7 +27,7 @@ public class ResultSetSqlParameterSource extends AbstractSqlParameterSource {
     public ResultSetSqlParameterSource(ResultSet resultSet) throws SQLException {
         ResultSetMetaData meta=resultSet.getMetaData();
         for(int i=1;i<=meta.getColumnCount();i++){
-            addValue(meta.getColumnName(i),resultSet.getObject(i),meta.getColumnType(i));
+            addValue(meta.getColumnName(i),resultSet.getObject(i));
         }
     }
 

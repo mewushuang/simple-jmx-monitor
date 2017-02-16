@@ -116,7 +116,8 @@ public class MonitoredSynchroniser implements MonitoredService {
         if(args!=null) len= args.length;
         String[] ret=new String[len+1];
         System.arraycopy(args,0,ret,0,args.length);
-        ret[len]= conf+ Paths.get(System.getProperty("user.dir"),"conf","application.yaml").toAbsolutePath().toString();
+        ret[len]= conf+ Paths.get(System.getProperty("user.dir"),"conf", "application.yaml").toAbsolutePath().toString();
+        logger.info("trying to find task configuration on:"+ret[len]);
         return ret;
     }
 }

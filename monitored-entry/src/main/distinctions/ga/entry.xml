@@ -23,7 +23,4 @@
     <!--是否打印报文日志 1是0否-->
     <entry key="seat.logRecordPacket">1</entry>
     <entry key="rt.logRecordPacket">1</entry>
-    <!--日志文件前缀-->
-    <entry key="seat.logNamePrefix">seat</entry>
-    <entry key="rt.logNamePrefix">rt</entry>
 </properties>

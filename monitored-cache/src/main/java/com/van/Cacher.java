@@ -1,5 +1,6 @@
 package com.van;
 
+import com.van.common.StatusAware;
 import com.van.monitor.api.Metric;
 import com.van.monitor.api.MonitoredService;
 import com.van.monitor.api.RunningStatusMetric;
@@ -17,7 +18,7 @@ import java.util.concurrent.Executor;
 /**
  * Created by van on 2016/11/29.
  */
-public class Cacher implements MonitoredService {
+public class Cacher implements MonitoredService,StatusAware {
 
     private final Logger logger = LoggerFactory.getLogger(Cacher.class);
 
@@ -32,7 +33,7 @@ public class Cacher implements MonitoredService {
         //String propertyFile = System.getProperty("user.dir") + File.separator + "conf" + File.separator + "rtdbsource.properties";
         //System.out.println(propertyFile);
         ReceiverWithOldAPI receiver = SpringApplication.run(SpringApp.class, args).getBean(ReceiverWithOldAPI.class);
-        receiver.receiveMessage();
+        receiver.receiveMessage(null);
     }
 
 
@@ -48,9 +49,6 @@ public class Cacher implements MonitoredService {
         //终止监听循环，在start的finally块中关闭applicationContext
         if (receiver != null) receiver.stopGracefully();
         release();
-        synchronized (lock) {
-            status = RunningStatusMetric.RunningStatus.stopped;
-        }
         logger.info("persistence service stopped");
     }
 
@@ -78,7 +76,7 @@ public class Cacher implements MonitoredService {
             synchronized (lock) {
                 this.status = RunningStatusMetric.RunningStatus.running;
             }
-            receiver.receiveMessage();
+            receiver.receiveMessage(this);
         } catch (Exception e) {
             logger.error("running with exception:", e);
         }
@@ -114,6 +112,13 @@ public class Cacher implements MonitoredService {
         }
         list.add(new OffsetMetric(offset));
         return list;
+    }
+
+    @Override
+    public void setStatus(RunningStatusMetric.RunningStatus status) {
+        synchronized (lock){
+            this.status=status;
+        }
     }
 
     static class OffsetMetric extends Metric {
