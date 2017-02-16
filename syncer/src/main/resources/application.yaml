@@ -1,0 +1,43 @@
+
+spring:
+  datasource:
+    # 主数据源，默认的（同步业务的源数据源）
+    src:
+      driver-class-name: oracle.jdbc.driver.OracleDriver
+      url: jdbc:oracle:thin:@rhvan:1521:orcl
+      username: van
+      password: 123456
+    # 自定义数据源（同步业务的目标数据源）
+    des:
+      driver-class-name: oracle.jdbc.driver.OracleDriver
+      url: jdbc:oracle:thin:@rhvan:1521:orcl
+      username: van
+      password: 123456
+
+sync:
+  batchSize: 1000
+  tasks:
+    -
+      name: sync_test_des
+      sql: SELECT SHT.ID AS ID,
+                  SHT.NODE_NAME AS NODE_NAME,
+                  SHT.ORGAN_CODE AS ORGAN_CODE,
+                  SHT.PARENT_ID AS PARENT_ID,
+                  (SELECT SHT1.ORGAN_CODE
+                     FROM SM_HR_TREE SHT1
+                    WHERE SHT1.ID = SHT.PARENT_ID) AS P_ORGAN_CODE,
+                  (SELECT SHT1.NODE_NAME
+                     FROM SM_HR_TREE SHT1
+                    WHERE SHT1.ID = SHT.PARENT_ID) AS P_NODE_NAME,
+                  SHT.NODE_TYPE_CODE AS NODE_TYPE_CODE,
+                  SHT.DISP_SN AS DISP_SN,
+                  SHT.IS_VALID AS IS_VALID
+             FROM SM_HR_TREE SHT
+      des: test
+      cron: "*/30 * * * * ?"
+
+    - name: t2
+      sql: select * from a
+      des: c
+      cron: "0 0 0,12 * * ?"
+
