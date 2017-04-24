@@ -1,23 +1,24 @@
 # Created by .ignore support plugin (hsz.mobi)
 .gitignore
 .gradle/
-.idea/compiler.xml
-.idea/copyright/
-.idea/encodings.xml
-.idea/gradle.xml
-.idea/libraries/
-.idea/misc.xml
-.idea/modules.xml
-.idea/modules/
-.idea/uiDesigner.xml
-.idea/workspace.xml
-.idea/vcs.xml
+.idea/
 logs/
 monitor-api/build/
 monitor-impl/build/
 monitor-impl/libs/
 monitor-impl/src/test/
-monitored-cache/
-monitored-entry/
+
+monitored-cache/build/
+monitored-cache/src/test/
+monitored-cache/lib/
+
+monitored-entry/build/
+monitored-entry/lib/
+monitored-entry/src/test/
+
+synchroniser/build/
+synchroniser/lib/
+synchroniser/src/test/
+
 recv/
 
