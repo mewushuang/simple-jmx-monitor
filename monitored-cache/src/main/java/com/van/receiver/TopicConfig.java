@@ -2,7 +2,6 @@ package com.van.receiver;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
-
 @ConfigurationProperties(prefix = "kafka.topics")
 @Component
 public class TopicConfig {
@@ -10,8 +9,8 @@ public class TopicConfig {
     /**
      * Folder location for storing files
      */
-    private String rtData="data.rt";
-    private String seatData="data.seat";
+    private String rtData;
+    private String seatData;
 
 
 
