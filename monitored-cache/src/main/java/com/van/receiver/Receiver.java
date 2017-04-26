@@ -57,7 +57,7 @@ public class Receiver {
                     if (logger.isDebugEnabled()) {
                         logger.debug(String.format("offset = %d, key = %s, len of value = %d", record.offset(), record.key(), record.value().length()));
                     }
-                    //taskDefineService.cacheTask(new ReceiverWithOldAPI.Record());
+                    //taskDefineService.cacheTask(new ReceiverWithOldAPI.Packet());
                     this.offset=record.offset();
                 }
             }

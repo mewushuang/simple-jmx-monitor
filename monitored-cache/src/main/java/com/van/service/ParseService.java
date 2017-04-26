@@ -54,7 +54,7 @@ public class ParseService {
      * 报文结构：
      *[{data:[
      *      {},...
-     *      ],gtime:"2016-10-12 11:48:46","scode":"P01_02007"}]
+     *      ],gtime:"2016-10-12 11:48:46","scode":"P01_02007"}...]
      * @param rawMsg 待解析的报文体
      * @return
      */

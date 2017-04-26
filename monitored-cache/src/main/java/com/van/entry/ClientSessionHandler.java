@@ -1,10 +1,6 @@
-package com.van.transfer;
+package com.van.entry;
 
-import com.van.DataReceiver;
-import com.van.service.PacketConsumer;
-import com.van.service.RtConsumer;
-import com.van.service.SeatConsumer;
-import com.van.service.TransferConfiguration;
+import com.van.receiver.EntryConfig;
 import org.apache.mina.core.service.IoHandler;
 import org.apache.mina.core.service.IoHandlerAdapter;
 import org.apache.mina.core.session.IdleStatus;
@@ -23,20 +19,11 @@ public class ClientSessionHandler extends IoHandlerAdapter {
 
     private PacketConsumer consumer;
 
-    private int module;
-    private String name;
+    private String module;
 
-    public ClientSessionHandler(int module,TransferConfiguration config) {
+    public ClientSessionHandler(String module,PacketConsumer consumer) {
         this.module=module;
-        if(this.module==Client.SEAT_MODULE) {
-            this.consumer = new SeatConsumer(config);
-            this.name= DataReceiver.SEAT_ARG;
-        }else if(this.module==Client.RT_MODULE){
-            this.name= DataReceiver.RT_ARG;
-            this.consumer=new RtConsumer(config);
-        }else {
-            throw new IllegalArgumentException("illegal argument module:"+module+",expect "+Client.RT_MODULE+" or "+Client.SEAT_MODULE);
-        }
+       this.consumer=consumer;
     }
 
     @Override
@@ -47,7 +34,7 @@ public class ClientSessionHandler extends IoHandlerAdapter {
         }
 
         if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("instance of ["+name+"] open socket["+session.getRemoteAddress().toString()+"],wrote init param:"+consumer.getInitParam());
+            LOGGER.info("instance of ["+module+"] open socket["+session.getRemoteAddress().toString()+"],wrote init param:"+consumer.getInitParam());
         }
     }
 
@@ -59,7 +46,7 @@ public class ClientSessionHandler extends IoHandlerAdapter {
     @Override
     public void exceptionCaught(IoSession session, Throwable cause) throws Exception {
         if(LOGGER.isErrorEnabled()){
-            LOGGER.error("IO error on instance of ["+name+"],  remote address is["+session.getRemoteAddress().toString()+"]",cause);
+            LOGGER.error("IO error on instance of ["+module+"],  remote address is["+session.getRemoteAddress().toString()+"]",cause);
         }
         session.closeNow();
 
@@ -83,7 +70,7 @@ public class ClientSessionHandler extends IoHandlerAdapter {
     @Override
     public void inputClosed(IoSession session) throws Exception {
         if(LOGGER.isErrorEnabled()){
-            LOGGER.error("instance of ["+name+"],remote socket["+session.getRemoteAddress().toString()+"] closed!");
+            LOGGER.error("instance of ["+module+"],remote socket["+session.getRemoteAddress().toString()+"] closed!");
         }
         session.closeNow();
     }

@@ -1,4 +1,4 @@
-package com.van.service;
+package com.van.entry;
 
 /**
  * Created by van on 2016/10/27.

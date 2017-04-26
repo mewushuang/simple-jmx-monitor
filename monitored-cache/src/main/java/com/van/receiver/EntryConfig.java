@@ -12,11 +12,11 @@ public class EntryConfig {
     private String zookeeperServerList;
     private String seatServer;
     private String rtServer;
-    private String timeout;
+    private int timeout;
     private String seatInitMsg;
     private String rtInitMsg;
-    private String seatIfLog;
-    private String rtIfLog;
+    private boolean seatIfLog;
+    private boolean rtIfLog;
     private String seatLogPrefix;
     private String rtLogPrefix;
 
@@ -44,11 +44,11 @@ public class EntryConfig {
         this.rtServer = rtServer;
     }
 
-    public String getTimeout() {
+    public int getTimeout() {
         return timeout;
     }
 
-    public void setTimeout(String timeout) {
+    public void setTimeout(int timeout) {
         this.timeout = timeout;
     }
 
@@ -68,21 +68,7 @@ public class EntryConfig {
         this.rtInitMsg = rtInitMsg;
     }
 
-    public String getSeatIfLog() {
-        return seatIfLog;
-    }
 
-    public void setSeatIfLog(String seatIfLog) {
-        this.seatIfLog = seatIfLog;
-    }
-
-    public String getRtIfLog() {
-        return rtIfLog;
-    }
-
-    public void setRtIfLog(String rtIfLog) {
-        this.rtIfLog = rtIfLog;
-    }
 
     public String getSeatLogPrefix() {
         return seatLogPrefix;
@@ -98,5 +84,21 @@ public class EntryConfig {
 
     public void setRtLogPrefix(String rtLogPrefix) {
         this.rtLogPrefix = rtLogPrefix;
+    }
+
+    public boolean isSeatIfLog() {
+        return seatIfLog;
+    }
+
+    public void setSeatIfLog(boolean seatIfLog) {
+        this.seatIfLog = seatIfLog;
+    }
+
+    public boolean isRtIfLog() {
+        return rtIfLog;
+    }
+
+    public void setRtIfLog(boolean rtIfLog) {
+        this.rtIfLog = rtIfLog;
     }
 }

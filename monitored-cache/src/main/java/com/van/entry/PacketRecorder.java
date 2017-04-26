@@ -1,4 +1,4 @@
-package com.van.common;
+package com.van.entry;
 
 import org.apache.log4j.Logger;
 

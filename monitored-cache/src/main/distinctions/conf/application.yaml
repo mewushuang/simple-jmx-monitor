@@ -1,19 +1,23 @@
+spring:
+  datasource:
+    driver-class-name: oracle.jdbc.driver.OracleDriver
+    url: "jdbc:oracle:thin:@localhost:1521/xe"
+    username: van
+    password: 123456
+
 kafka:
-    topics:
-        itemUpdate: datadublishderver.realtimedata
-        rtData: data.rt
-        seatData: data.seat
+    topic: datadublishderver.realtimedata
 
 ##-------EntryConfig----------
 
-seat-server: 127.0.0.1:44444
+seat-server: 127.0.0.1:19999
 #单引号转义其中的大括号等
 seat-init-msg: '{"servicecode":"P01_02020,P01_0202001,P01_0202002,P01_02013,P01_0201301,P01_0201302,P01_0201303,P01_0201304,P01_0201305,P01_0201308,P01_02007,P01_0200701,P01_0200302,P01_02001,P01_0200101,P01_0200102,P01_02062,P01_02063,P01_02016,P01_02060,P01_02061,P01_02031,P01_02069,P01_02064,P01_02067,P01_02065,P01_02066,P01_02018,P01_02019,P01_02033,P01_02017","source":"kd"}'
 seat-if-log: true
 seat-log-prefix: seat
 
 
-rt-server: 127.0.0.1:22222
+rt-server: 127.0.0.1:19999
 rt-init-msg: '2541{"servicecode":"P01_02001，P01_02002，P01_02003.....","source":"kd"}'
 rt-if-log: true
 rt-log-prefix: rt

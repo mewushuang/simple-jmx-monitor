@@ -21,7 +21,6 @@
     </appender>
 
 
-    <!-- INFO级别 -->
     <appender name="FILE_TRACE" class="ch.qos.logback.core.rolling.RollingFileAppender">
 
         <filter class="ch.qos.logback.classic.filter.LevelFilter">
@@ -119,11 +118,50 @@
         </encoder>
     </appender>
 
+    <!-- packet recorder -->
+    <appender name="SEAT_RECORDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <File>${App_Home}/recv/seat.log</File>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${App_Home}/recv/seat-%d{yyyy-MM-dd__HH-mm}-%i.log</FileNamePattern>
+            <MaxHistory>48</MaxHistory>
+            <TimeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <MaxFileSize>200MB</MaxFileSize>
+            </TimeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>%msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- packet recorder -->
+    <appender name="RT_RECORDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <File>${App_Home}/recv/rt.log</File>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${App_Home}/recv/rt-%d{yyyy-MM-dd__HH}-%i.log</FileNamePattern>
+            <MaxHistory>48</MaxHistory>
+            <TimeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <MaxFileSize>200MB</MaxFileSize>
+            </TimeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>%msg%n</pattern>
+        </encoder>
+    </appender>
+
 
     <!-- 控制java下面包的打印,没设置等级,将继承上级root的等级 -->
     <logger name="org.springframework" additivity="true" level="INFO"/>
     <logger name="org.van.monitor" additivity="true" level="INFO"/>
     <logger name="com.van" level="INFO"/>
+    <!--单纯用来打印报文, 且不再继续向上级logger传递日志-->
+    <logger name="com.van.entry.RtRecorder" level="TRACE" addtivity="false" >
+        <appender-ref ref="RT_RECORDER"/>
+    </logger>
+    <logger name="com.van.entry.SeatRecorder" level="TRACE" addtivity="false"  >
+        <appender-ref ref="SEAT_RECORDER"/>
+    </logger>
 
     <!-- 当前日志总级别为TRACE、DEBUG、INFO、 WARN、ERROR、ALL和 OF -->
     <root level="INFO">

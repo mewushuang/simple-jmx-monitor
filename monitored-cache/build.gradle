@@ -35,6 +35,7 @@ dependencies {
     compile project(":monitor-api")
     compile fileTree(dir: new File(monitor.projectDir,'libs'))
     compile("org.springframework.boot:spring-boot-starter:"+spingBootVersion)
+    compile "org.springframework.boot:spring-boot-starter-jdbc:"+spingBootVersion
     compile("org.springframework.boot:spring-boot-configuration-processor:"+spingBootVersion)
 }
 //自定义生产测试两套配置
@@ -49,7 +50,7 @@ sourceSets {
     }
 }
 
-mainClassName = 'com.van.Cacher'
+mainClassName = 'com.van.DataReceiver'
 
 
 processResources{

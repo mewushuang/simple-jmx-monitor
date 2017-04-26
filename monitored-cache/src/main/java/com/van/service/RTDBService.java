@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -57,7 +58,7 @@ public class RTDBService {
      */
     private Map<String, Map<String, String>> tableId_JFieldNameDFieldId;
 
-    @Value("datapublishserver.realtimedata")
+    @Value("${kafka.topic}")
     private String updateTopic;
 
 
@@ -66,6 +67,7 @@ public class RTDBService {
      *
      * @param entity
      */
+    @Async
     public void saveEntity(ScodeEntity entity) {
         List<String> toNotice = new ArrayList<>();
         Assert.asertNotNull(entity.getType(), "entity type unset");
