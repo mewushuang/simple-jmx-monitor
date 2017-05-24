@@ -37,8 +37,10 @@ public class DataReceiver implements MonitoredService {
         checkParams(strings);
         if (isSeat(strings)) {
             context.getSeat().stop();
+            logger.info("client["+Client.SEAT_MODULE+"] is stopped");
         } else if (isRt(strings)) {
             context.getRt().stop();
+            logger.info("client["+Client.RT_MODULE+"] is stopped");
         } else {
             checkParam(strings[0]);
         }
@@ -135,19 +137,19 @@ public class DataReceiver implements MonitoredService {
     }
 
     public static void main(String[] args) throws InterruptedException {
-        /*final DataReceiver d = new DataReceiver();
+        final DataReceiver d = new DataReceiver();
         ExecutorService threadPool = Executors.newFixedThreadPool(5);
-        d.startDefault(threadPool);*/
+        d.startDefault(threadPool);
 
         //测试
-        DataReceiver d = new DataReceiver();
+        /*DataReceiver d = new DataReceiver();
         String[] strings = d.addSpringBootArg(new String[]{});
         d.applicationContext = SpringApp.run(strings);
         ParseService p=d.applicationContext.getBean(ParseService.class);
         ScodeTimeRecorderService s=d.applicationContext.getBean(ScodeTimeRecorderService.class);
         String v="{\"time\":\"2016-02-22 15:31:29\",\"data\":[{\"dim\":\"dn\",\"v\":\"99.98\",\"tt\":\"02\",\"code\":\"711010209\"},{\"dim\":\"dn\",\"v\":\"99.98\",\"tt\":\"03\",\"code\":\"711010209\"}]}";
         ScodeEntity entity=p.parseRawMsgOfRt("P02_02189", v);
-        s.recordTime(entity);
+        s.recordTime(entity);*/
     }
 
     private String[] addSpringBootArg(String[] args) {
@@ -155,7 +157,8 @@ public class DataReceiver implements MonitoredService {
         if (args != null) len = args.length;
         String[] ret = new String[len + 1];
         System.arraycopy(args, 0, ret, 0, args.length);
-        ret[len] = conf + Paths.get(System.getProperty("user.dir"), "conf").toAbsolutePath().toString();
+        ret[len] = conf + Paths.get(System.getProperty("user.dir"), "conf","application.yaml").toAbsolutePath().toString();
+        logger.info(ret[len]);
         return ret;
     }
 }

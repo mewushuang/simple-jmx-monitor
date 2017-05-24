@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 /**
  * Created by van on 17-4-24.
  */
-@ConfigurationProperties
+@ConfigurationProperties(locations = "application.yaml")
 @Component
 public class EntryConfig {
     private String zookeeperServerList;

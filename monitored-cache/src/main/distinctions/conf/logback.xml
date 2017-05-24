@@ -120,10 +120,10 @@
 
     <!-- packet recorder -->
     <appender name="SEAT_RECORDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <File>${App_Home}/recv/seat.log</File>
+        <File>${Log_Home}/../recv/seat.log</File>
 
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <FileNamePattern>${App_Home}/recv/seat-%d{yyyy-MM-dd__HH-mm}-%i.log</FileNamePattern>
+            <FileNamePattern>${Log_Home}/../recv/seat-%d{yyyy-MM-dd__HH-mm}-%i.log</FileNamePattern>
             <MaxHistory>48</MaxHistory>
             <TimeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
                 <MaxFileSize>200MB</MaxFileSize>
@@ -136,10 +136,10 @@
 
     <!-- packet recorder -->
     <appender name="RT_RECORDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <File>${App_Home}/recv/rt.log</File>
+        <File>${Log_Home}/../recv/rt.log</File>
 
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <FileNamePattern>${App_Home}/recv/rt-%d{yyyy-MM-dd__HH}-%i.log</FileNamePattern>
+            <FileNamePattern>${Log_Home}/../recv/rt-%d{yyyy-MM-dd__HH}-%i.log</FileNamePattern>
             <MaxHistory>48</MaxHistory>
             <TimeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
                 <MaxFileSize>200MB</MaxFileSize>

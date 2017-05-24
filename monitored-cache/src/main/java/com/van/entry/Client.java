@@ -60,7 +60,10 @@ public class Client {
         this.propertyPrefix=module;
         this.consumer=consumer;
         status = new SimpleAtomicStatus<>(RunningStatusMetric.RunningStatus.stopped);
-        initMina(module);
+        handler = new ClientSessionHandler(module, consumer);
+
+        //connector stop后不能继续使用, 此段逻辑移到start方法中
+        //initMina(module);
     }
 
 
@@ -71,6 +74,7 @@ public class Client {
                 RunningStatusMetric.RunningStatus.stopped,
                 RunningStatusMetric.RunningStatus.stopping);
         if (!canStart) return;
+        initMina(propertyPrefix);
         stopping=false;
         while (!isStopping()) {
             try {
@@ -142,6 +146,7 @@ public class Client {
         stopping=true;
         status.notInAndSet(RunningStatusMetric.RunningStatus.stopping, RunningStatusMetric.RunningStatus.stopping);
         connector.dispose(true);
+        connector=null;
         handler.release();
         status.notInAndSet(RunningStatusMetric.RunningStatus.stopped, RunningStatusMetric.RunningStatus.stopped);
     }
@@ -160,7 +165,7 @@ public class Client {
 
         //connector.getFilterChain().addLast("logger", new LoggingFilter());
 
-        handler = new ClientSessionHandler(module, consumer);
+
         connector.setHandler(handler);
 
     }

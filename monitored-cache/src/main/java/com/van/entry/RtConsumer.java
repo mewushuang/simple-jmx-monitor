@@ -97,7 +97,7 @@ public class RtConsumer implements PacketConsumer {
 
     @Override
     public void releaseResource() {
-        logger.info("mq sender closed by rt consumer");
+
     }
 
     @Override

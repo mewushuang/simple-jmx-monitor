@@ -68,6 +68,15 @@ processResources{
     into 'build/conf'
 }
 jar.dependsOn copyConf*/
+
+//打包源码
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+jar.dependsOn sourcesJar
+
+
 //打包时处理conf文件
 //将本项目生成的jar和依赖 加上 monitor-impl生成的框架 合并到一起打包
 distributions {

@@ -1,13 +1,13 @@
 package com.van;
 
-import com.van.entry.AddressManager;
-import com.van.entry.Client;
-import com.van.entry.PacketConsumer;
+import com.van.entry.*;
 import com.van.receiver.EntryConfig;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 
 /**
  * Created by van on 17-4-25.
@@ -20,10 +20,10 @@ public class EntryContext {
 
     @Autowired
     private EntryConfig entryConfig;
-    @Autowired
-    private PacketConsumer seatConsumer;
-    @Autowired
-    private PacketConsumer rtConsumer;
+    @Resource
+    private SeatConsumer seatConsumer;
+    @Resource
+    private RtConsumer rtConsumer;
     @Autowired
     private AddressManager addressManager;
 

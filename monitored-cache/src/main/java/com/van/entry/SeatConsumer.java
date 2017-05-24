@@ -6,10 +6,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.task.TaskRejectedException;
+import org.springframework.stereotype.Component;
 
 /**
  * Created by rabit on 2016/6/2.
  */
+@Component
 public class SeatConsumer implements PacketConsumer {
     private final static Logger logger = LoggerFactory.getLogger(SeatConsumer.class);
     private PacketRecorder recorder;
@@ -44,7 +46,7 @@ public class SeatConsumer implements PacketConsumer {
 
     @Override
     public void releaseResource() {
-        logger.info("mq sender closed by seat consumer");
+
     }
 
     @Override
