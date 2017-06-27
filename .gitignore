@@ -5,19 +5,15 @@
 logs/
 monitor-api/build/
 monitor-impl/build/
-monitor-impl/libs/
 monitor-impl/src/test/
 
 monitored-cache/build/
 monitored-cache/src/test/
-monitored-cache/lib/
 
 monitored-entry/build/
-monitored-entry/lib/
 monitored-entry/src/test/
 
 synchroniser/build/
-synchroniser/lib/
 synchroniser/src/test/
 
 recv/
